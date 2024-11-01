@@ -51,7 +51,7 @@ const Conversation = ({ conversation, isOnline, onClick }) => {
 				</Avatar>
 			</WrapItem>
 
-			<Stack direction={"column"} fontSize={{ base: "sm", md: "md" }}>
+			<Stack direction={"column"} fontSize={{ base: "sm", md: "md" }} >
 				<Text fontWeight='700' display={"flex"} alignItems={"center"}>
 					{user.username} <Image src='/verified.png' w={4} h={4} ml={1} />
 				</Text>
