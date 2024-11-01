@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import UserHeader from "../components/UserHeader";
 import { useParams } from "react-router-dom";
 import useShowToast from "../hooks/useShowToast";
-import { Flex, Spinner } from "@chakra-ui/react";
+import { Box, Flex, Spinner } from "@chakra-ui/react";
 import Post from "../components/Post";
 import useGetUserProfile from "../hooks/useGetUserProfile";
 import { useRecoilState } from "recoil";
@@ -56,8 +56,13 @@ const UserPage = () => {
 				</Flex>
 			)}
 
+			{/* {posts.map((post) => (
+				<Post key={post._id} post={post} postedBy={post.postedBy}  />
+			))} */}
 			{posts.map((post) => (
-				<Post key={post._id} post={post} postedBy={post.postedBy} />
+				<Box key={post._id} mb={40}> {/* Adjust the margin as needed */}
+					<Post post={post} postedBy={post.postedBy} />
+				</Box>
 			))}
 		</>
 	);

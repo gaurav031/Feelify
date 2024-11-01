@@ -42,7 +42,7 @@ const UserSearch = () => {
 	
 
 	return (
-		<Box p={4}>
+		<Box p={4} mt={-50}>
 			<Flex alignItems="center" gap={2}>
 				<Input
 					placeholder="Search for a user"
@@ -54,7 +54,7 @@ const UserSearch = () => {
 				</Button>
 			</Flex>
 			
-			<Flex direction="column">
+			<Flex direction="column"  mb={5}>
 				{users.length === 0 ? (
 					<Text>No users found</Text>
 				) : (

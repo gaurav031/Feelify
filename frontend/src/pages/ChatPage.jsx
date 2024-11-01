@@ -1,4 +1,4 @@
-import { SearchIcon, HamburgerIcon, ArrowBackIcon } from "@chakra-ui/icons"; // Import the back icon
+import { SearchIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import {
     Box,
     Button,
@@ -11,9 +11,9 @@ import {
     useColorModeValue,
     Image,
     useColorMode,
+    Avatar,
 } from "@chakra-ui/react";
 import Conversation from "../components/Conversation";
-import { GiConversation } from "react-icons/gi";
 import MessageContainer from "../components/MessageContainer";
 import { useEffect, useState } from "react";
 import useShowToast from "../hooks/useShowToast";
@@ -21,6 +21,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import { conversationsAtom, selectedConversationAtom } from "../atoms/messagesAtom";
 import userAtom from "../atoms/userAtom";
 import { useSocket } from "../context/SocketContext";
+import { useNavigate } from "react-router-dom";
 
 const ChatPage = () => {
     const [searchingUser, setSearchingUser] = useState(false);
@@ -33,23 +34,23 @@ const ChatPage = () => {
     const { socket, onlineUsers } = useSocket();
     const [showConversations, setShowConversations] = useState(true);
     const { colorMode } = useColorMode();
+	const navigate = useNavigate();
+    const messageSound = new Audio("/src/assets/sound/message.mp3");
+
+    // Utility function to sort conversations by the most recent message
+    const sortConversations = (convs) =>
+        convs.sort((a, b) => new Date(b.lastMessage.date) - new Date(a.lastMessage.date));
 
     useEffect(() => {
-        socket?.on("messagesSeen", ({ conversationId }) => {
+        // Play sound and update conversations list on new message
+        socket?.on("newMessage", (newMessage) => {
             setConversations((prev) => {
-                const updatedConversations = prev.map((conversation) => {
-                    if (conversation._id === conversationId) {
-                        return {
-                            ...conversation,
-                            lastMessage: {
-                                ...conversation.lastMessage,
-                                seen: true,
-                            },
-                        };
-                    }
-                    return conversation;
-                });
-                return updatedConversations;
+                const updatedConversations = [
+                    newMessage,
+                    ...prev.filter((conversation) => conversation._id !== newMessage._id),
+                ];
+                messageSound.play();
+                return sortConversations(updatedConversations);
             });
         });
     }, [socket, setConversations]);
@@ -63,7 +64,8 @@ const ChatPage = () => {
                     showToast("Error", data.error, "error");
                     return;
                 }
-                setConversations(data);
+                // Sort conversations after fetching
+                setConversations(sortConversations(data));
             } catch (error) {
                 showToast("Error", error.message, "error");
             } finally {
@@ -85,19 +87,18 @@ const ChatPage = () => {
                 return;
             }
 
-            const messagingYourself = searchedUser._id === currentUser._id;
-            if (messagingYourself) {
+            if (searchedUser._id === currentUser._id) {
                 showToast("Error", "You cannot message yourself", "error");
                 return;
             }
 
-            const conversationAlreadyExists = conversations.find(
+            const conversationExists = conversations.find(
                 (conversation) => conversation.participants[0]._id === searchedUser._id
             );
 
-            if (conversationAlreadyExists) {
+            if (conversationExists) {
                 setSelectedConversation({
-                    _id: conversationAlreadyExists._id,
+                    _id: conversationExists._id,
                     userId: searchedUser._id,
                     username: searchedUser.username,
                     userProfilePic: searchedUser.profilePic,
@@ -111,6 +112,7 @@ const ChatPage = () => {
                 lastMessage: {
                     text: "",
                     sender: "",
+                    date: new Date().toISOString(),
                 },
                 _id: Date.now(),
                 participants: [
@@ -121,7 +123,7 @@ const ChatPage = () => {
                     },
                 ],
             };
-            setConversations((prevConvs) => [...prevConvs, mockConversation]);
+            setConversations((prevConvs) => sortConversations([mockConversation, ...prevConvs]));
         } catch (error) {
             showToast("Error", error.message, "error");
         } finally {
@@ -141,11 +143,13 @@ const ChatPage = () => {
     };
 
     const handleBackClick = () => {
-        setSelectedConversation({}); // Clear the selected conversation
-        setShowConversations(true); // Show conversations again
+        if (showConversations) {
+            navigate("/");
+        } else {
+            setShowConversations(true);
+            setSelectedConversation(null);
+        }
     };
-
-    
 
     return (
         <Box
@@ -156,16 +160,26 @@ const ChatPage = () => {
             transform={"translateX(-50%)"}
         >
             <Flex alignItems="center" justifyContent="space-between" mb={4}>
-                {selectedConversation._id && ( // Check if a conversation is selected
+                <>
                     <IconButton
                         aria-label="Back to conversations"
                         icon={<ArrowBackIcon />}
                         onClick={handleBackClick}
-                        mt={-10}
+                        mt={5}
                     />
-                )}
-                <Flex alignItems="center" gap={2} mt={-10}>
+                    <Avatar
+                        size='sm'
+                        name={currentUser.name}
+                        src={currentUser?.profilePic}
+                        mt={5} ml={{ base: "0", lg: "-250px" }}
+                    />
+                    <Text fontWeight={500} fontSize="sm" mt={5} ml={{ base: "0", lg: "-200px" }}>
+                        {currentUser.username}
+                    </Text>
+                </>
+                <Flex alignItems="center" gap={2} mt={5}>
                     <Input
+                        width={150}
                         placeholder="Search for a user"
                         onChange={(e) => setSearchText(e.target.value)}
                     />
@@ -231,15 +245,15 @@ const ChatPage = () => {
                                 >
                                     <Box>
                                         <Image
-                                            src={conversation.participants[0].profilePic} // Ensure this URL is valid
+                                            src={conversation.participants[0].profilePic}
                                             alt={`${conversation.participants[0].username}'s profile`}
                                             borderRadius="full"
                                             boxSize="40px"
                                             objectFit="cover"
-                                            fallbackSrc="path/to/default-avatar.png" // Provide a fallback image path
+                                            fallbackSrc="/path/to/default-avatar.png"
                                             onError={(e) => {
-                                                e.target.onerror = null; // Prevent looping
-                                                e.target.src = "path/to/default-avatar.png"; // Set fallback image
+                                                e.target.onerror = null;
+                                                e.target.src = "/path/to/default-avatar.png";
                                             }}
                                         />
                                     </Box>
@@ -263,10 +277,8 @@ const ChatPage = () => {
                             ))}
                     </Flex>
                 )}
-                {/* Message Container */}
-                {!showConversations && selectedConversation._id && (
+                {!showConversations && selectedConversation?._id && (
                     <MessageContainer
-               
                         selectedConversation={selectedConversation}
                         socket={socket}
                         setShowConversations={setShowConversations}

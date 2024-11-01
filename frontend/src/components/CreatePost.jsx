@@ -82,44 +82,53 @@ const CreatePost = ({ isOpen, onClose }) => {
 	return (
 		<Modal isOpen={isOpen} onClose={onClose}>
 			<ModalOverlay />
-			<ModalContent>
-				<ModalHeader>Create Post</ModalHeader>
+			<ModalContent mx={4} my={6} maxW="lg" borderRadius="md" boxShadow="lg">
+				<ModalHeader textAlign="center">Create Post</ModalHeader>
 				<ModalCloseButton />
-				<ModalBody pb={6}>
-					<FormControl>
+				<ModalBody pb={6} display="flex" flexDirection="column" alignItems="center">
+					<FormControl w="100%">
 						<Textarea
-							placeholder="Post content goes here.."
+							placeholder="Post content goes here..."
 							onChange={handleTextChange}
 							value={postText}
+							resize="none"
+							minHeight="120px"
+							maxHeight="200px"
+							borderColor={useColorModeValue("gray.300", "gray.600")}
+							_focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px rgba(66, 153, 225, 0.6)" }}
 						/>
-						<Text fontSize="xs" fontWeight="bold" textAlign={"right"} m={"1"} color={"gray.800"}>
+						<Text fontSize="xs" fontWeight="bold" textAlign="right" mt={1} color="gray.800">
 							{remainingChar}/{MAX_CHAR}
 						</Text>
 
 						<Input type="file" hidden ref={imageRef} onChange={handleImageChange} />
-						<BsFillImageFill
-							style={{ marginLeft: "5px", cursor: "pointer" }}
-							size={16}
-							onClick={() => imageRef.current.click()}
-						/>
+						<Flex alignItems="center" mt={2}>
+							<BsFillImageFill
+								style={{ marginLeft: "5px", cursor: "pointer" }}
+								size={20}
+								onClick={() => imageRef.current.click()}
+								color={useColorModeValue("blue.500", "blue.300")}
+							/>
+						</Flex>
 					</FormControl>
 
 					{imgUrl && (
-						<Flex mt={5} w={"full"} position={"relative"}>
-							<Image src={imgUrl} alt="Selected img" />
+						<Flex mt={5} w="full" justifyContent="center" position="relative">
+							<Image src={imgUrl} alt="Selected img" borderRadius="md" maxH="200px" />
 							<CloseButton
 								onClick={() => {
 									setImgUrl("");
 								}}
-								bg={"gray.800"}
-								position={"absolute"}
+								bg="gray.800"
+								color="white"
+								position="absolute"
 								top={2}
 								right={2}
 							/>
 						</Flex>
 					)}
 				</ModalBody>
-				<ModalFooter>
+				<ModalFooter justifyContent="center">
 					<Button colorScheme="blue" mr={3} onClick={handleCreatePost} isLoading={loading}>
 						Post
 					</Button>

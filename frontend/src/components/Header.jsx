@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom"; // Import useLocation
 import { Button, Flex, Box, Link, useColorMode, Text, Input } from "@chakra-ui/react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
@@ -26,6 +27,11 @@ const Header = () => {
 	const handleSearchRedirect = () => {
 		navigate(`/search`);
 	};
+	// Check if current path is "/chat" and viewport is small
+	const isChatPageOnMobile = location.pathname === "/chat" && window.innerWidth <= 768;
+
+	// Don't render Header in mobile view if on the chat page
+	if (isChatPageOnMobile) return null;
 
 	return (
 		<>

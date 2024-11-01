@@ -34,7 +34,7 @@ const HomePage = () => {
 	}, [showToast, setPosts]);
 
 	return (
-		<Flex gap="10" alignItems="flex-start" direction={{ base: "column", md: "row" }}  mt={-10} >
+		<Flex gap="10" alignItems="flex-start" direction={{ base: "column", md: "row" }}  mt={-10} mb={80} >
 			<Box flex={70}>
 				{!loading && posts.length === 0 && (
 					<>

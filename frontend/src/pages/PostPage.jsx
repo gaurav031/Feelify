@@ -106,7 +106,7 @@ const PostPage = () => {
 
 			<Divider my={4} />
 
-			<Flex justifyContent={"space-between"}>
+			<Flex justifyContent={"space-between"} mb={70}>
 				<Flex gap={2} alignItems={"center"}>
 					<Text fontSize={"2xl"}>👋</Text>
 					<Text color={"gray.light"}>Get the app to like, reply and post.</Text>

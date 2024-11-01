@@ -59,7 +59,7 @@ const Post = ({ post, postedBy }) => {
 
 	if (!user) return null;
 	return (
-		<Link to={`/${user.username}/post/${post._id}`}>
+		<Link to={`/${user.username}/post/${post._id}`} >
 			<Flex gap={3} mb={4} py={5}>
 				<Flex flexDirection={"column"} alignItems={"center"}>
 					<Avatar
