@@ -13,13 +13,14 @@ import {
 	useColorModeValue,
 	Link,
 } from "@chakra-ui/react";
+import { Image } from "@chakra-ui/react";
 import { useState } from "react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useSetRecoilState } from "recoil";
 import authScreenAtom from "../atoms/authAtom";
 import useShowToast from "../hooks/useShowToast";
 import userAtom from "../atoms/userAtom";
-
+import logo from '../assets/images/logo.png';
 export default function LoginCard() {
 	const [showPassword, setShowPassword] = useState(false);
 	const setAuthScreen = useSetRecoilState(authScreenAtom);
@@ -57,11 +58,7 @@ export default function LoginCard() {
 	return (
 		<Flex align={"center"} justify={"center"}>
 			<Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
-				<Stack align={"center"}>
-					<Heading fontSize={"4xl"} textAlign={"center"}>
-						Login
-					</Heading>
-				</Stack>
+
 				<Box
 					rounded={"lg"}
 					bg={useColorModeValue("white", "gray.dark")}
@@ -73,6 +70,9 @@ export default function LoginCard() {
 					}}
 				>
 					<Stack spacing={4}>
+						<Stack align={"center"}>
+							<Image src={logo} alt="Logo" boxSize="100px" objectFit="cover" />
+						</Stack>
 						<FormControl isRequired>
 							<FormLabel>Username</FormLabel>
 							<Input

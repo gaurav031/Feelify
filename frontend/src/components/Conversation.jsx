@@ -39,6 +39,7 @@ const Conversation = ({ conversation, isOnline, onClick }) => {
 			}
 			borderRadius={"md"}
 			w="full"
+			
 			onClick={() => onClick(conversation)} // Call the onClick function
 		>
 			<WrapItem>

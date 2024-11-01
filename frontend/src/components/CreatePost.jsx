@@ -1,4 +1,3 @@
-import { AddIcon } from "@chakra-ui/icons";
 import {
 	Button,
 	CloseButton,
@@ -16,7 +15,6 @@ import {
 	Text,
 	Textarea,
 	useColorModeValue,
-	useDisclosure,
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import usePreviewImg from "../hooks/usePreviewImg";
@@ -29,8 +27,7 @@ import { useParams } from "react-router-dom";
 
 const MAX_CHAR = 500;
 
-const CreatePost = () => {
-	const { isOpen, onOpen, onClose } = useDisclosure();
+const CreatePost = ({ isOpen, onClose }) => {
 	const [postText, setPostText] = useState("");
 	const { handleImageChange, imgUrl, setImgUrl } = usePreviewImg();
 	const imageRef = useRef(null);
@@ -43,7 +40,6 @@ const CreatePost = () => {
 
 	const handleTextChange = (e) => {
 		const inputText = e.target.value;
-
 		if (inputText.length > MAX_CHAR) {
 			const truncatedText = inputText.slice(0, MAX_CHAR);
 			setPostText(truncatedText);
@@ -64,7 +60,6 @@ const CreatePost = () => {
 				},
 				body: JSON.stringify({ postedBy: user._id, text: postText, img: imgUrl }),
 			});
-
 			const data = await res.json();
 			if (data.error) {
 				showToast("Error", data.error, "error");
@@ -85,68 +80,52 @@ const CreatePost = () => {
 	};
 
 	return (
-		<>
-			<Button
-				position={"fixed"}
-				bottom={10}
-				right={5}
-				bg={useColorModeValue("gray.300", "gray.dark")}
-				onClick={onOpen}
-				size={{ base: "sm", sm: "md" }}
-			>
-				<AddIcon />
-			</Button>
+		<Modal isOpen={isOpen} onClose={onClose}>
+			<ModalOverlay />
+			<ModalContent>
+				<ModalHeader>Create Post</ModalHeader>
+				<ModalCloseButton />
+				<ModalBody pb={6}>
+					<FormControl>
+						<Textarea
+							placeholder="Post content goes here.."
+							onChange={handleTextChange}
+							value={postText}
+						/>
+						<Text fontSize="xs" fontWeight="bold" textAlign={"right"} m={"1"} color={"gray.800"}>
+							{remainingChar}/{MAX_CHAR}
+						</Text>
 
-			<Modal isOpen={isOpen} onClose={onClose}>
-				<ModalOverlay />
+						<Input type="file" hidden ref={imageRef} onChange={handleImageChange} />
+						<BsFillImageFill
+							style={{ marginLeft: "5px", cursor: "pointer" }}
+							size={16}
+							onClick={() => imageRef.current.click()}
+						/>
+					</FormControl>
 
-				<ModalContent>
-					<ModalHeader>Create Post</ModalHeader>
-					<ModalCloseButton />
-					<ModalBody pb={6}>
-						<FormControl>
-							<Textarea
-								placeholder='Post content goes here..'
-								onChange={handleTextChange}
-								value={postText}
+					{imgUrl && (
+						<Flex mt={5} w={"full"} position={"relative"}>
+							<Image src={imgUrl} alt="Selected img" />
+							<CloseButton
+								onClick={() => {
+									setImgUrl("");
+								}}
+								bg={"gray.800"}
+								position={"absolute"}
+								top={2}
+								right={2}
 							/>
-							<Text fontSize='xs' fontWeight='bold' textAlign={"right"} m={"1"} color={"gray.800"}>
-								{remainingChar}/{MAX_CHAR}
-							</Text>
-
-							<Input type='file' hidden ref={imageRef} onChange={handleImageChange} />
-
-							<BsFillImageFill
-								style={{ marginLeft: "5px", cursor: "pointer" }}
-								size={16}
-								onClick={() => imageRef.current.click()}
-							/>
-						</FormControl>
-
-						{imgUrl && (
-							<Flex mt={5} w={"full"} position={"relative"}>
-								<Image src={imgUrl} alt='Selected img' />
-								<CloseButton
-									onClick={() => {
-										setImgUrl("");
-									}}
-									bg={"gray.800"}
-									position={"absolute"}
-									top={2}
-									right={2}
-								/>
-							</Flex>
-						)}
-					</ModalBody>
-
-					<ModalFooter>
-						<Button colorScheme='blue' mr={3} onClick={handleCreatePost} isLoading={loading}>
-							Post
-						</Button>
-					</ModalFooter>
-				</ModalContent>
-			</Modal>
-		</>
+						</Flex>
+					)}
+				</ModalBody>
+				<ModalFooter>
+					<Button colorScheme="blue" mr={3} onClick={handleCreatePost} isLoading={loading}>
+						Post
+					</Button>
+				</ModalFooter>
+			</ModalContent>
+		</Modal>
 	);
 };
 

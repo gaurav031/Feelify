@@ -31,7 +31,7 @@ const SuggestedUsers = () => {
 
 	return (
 		<>
-			<Text mb={4} fontWeight={"bold"}>
+			<Text mb={4} fontWeight={"bold"}  mt={4}>
 				Suggested Users
 			</Text>
 			<Flex direction={"column"} gap={4}>

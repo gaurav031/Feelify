@@ -1,4 +1,4 @@
-import { SearchIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { SearchIcon, HamburgerIcon, ArrowBackIcon } from "@chakra-ui/icons"; // Import the back icon
 import {
     Box,
     Button,
@@ -9,6 +9,8 @@ import {
     SkeletonCircle,
     Text,
     useColorModeValue,
+    Image,
+    useColorMode,
 } from "@chakra-ui/react";
 import Conversation from "../components/Conversation";
 import { GiConversation } from "react-icons/gi";
@@ -29,7 +31,8 @@ const ChatPage = () => {
     const currentUser = useRecoilValue(userAtom);
     const showToast = useShowToast();
     const { socket, onlineUsers } = useSocket();
-    const [showConversations, setShowConversations] = useState(true); // State to toggle conversations
+    const [showConversations, setShowConversations] = useState(true);
+    const { colorMode } = useColorMode();
 
     useEffect(() => {
         socket?.on("messagesSeen", ({ conversationId }) => {
@@ -99,7 +102,7 @@ const ChatPage = () => {
                     username: searchedUser.username,
                     userProfilePic: searchedUser.profilePic,
                 });
-                setShowConversations(false); // Hide conversations
+                setShowConversations(false);
                 return;
             }
 
@@ -134,12 +137,15 @@ const ChatPage = () => {
             username: conversation.participants[0].username,
             mock: conversation.mock,
         });
-        setShowConversations(false); // Hide conversations when a conversation is selected
+        setShowConversations(false);
     };
 
-    const toggleConversations = () => {
-        setShowConversations((prev) => !prev); // Toggle conversation list
+    const handleBackClick = () => {
+        setSelectedConversation({}); // Clear the selected conversation
+        setShowConversations(true); // Show conversations again
     };
+
+    
 
     return (
         <Box
@@ -149,24 +155,19 @@ const ChatPage = () => {
             p={4}
             transform={"translateX(-50%)"}
         >
-            <Flex
-                alignItems="center"
-                justifyContent="space-between"
-                mb={4}
-            >
-                {selectedConversation._id && (
+            <Flex alignItems="center" justifyContent="space-between" mb={4}>
+                {selectedConversation._id && ( // Check if a conversation is selected
                     <IconButton
-                        aria-label="Show Conversations"
-                        icon={<HamburgerIcon />}
-                        onClick={toggleConversations}
-                        display={{ base: "inline-flex" }} // Hide on larger screens
+                        aria-label="Back to conversations"
+                        icon={<ArrowBackIcon />}
+                        onClick={handleBackClick}
+                        mt={-10}
                     />
                 )}
-                <Flex alignItems="center" gap={2}>
+                <Flex alignItems="center" gap={2} mt={-10}>
                     <Input
                         placeholder="Search for a user"
                         onChange={(e) => setSearchText(e.target.value)}
-                        display={showConversations ? "flex" : "none"} // Show only when conversations are visible
                     />
                     <Button size={"sm"} onClick={handleConversationSearch} isLoading={searchingUser}>
                         <SearchIcon />
@@ -177,26 +178,40 @@ const ChatPage = () => {
             <Flex
                 gap={4}
                 flexDirection={{ base: "column", md: "row" }}
-                maxW={{
-                    sm: "400px",
-                    md: "full",
-                }}
+                maxW={{ sm: "400px", md: "full" }}
                 mx={"auto"}
             >
-                {/* Conditional rendering based on showConversations state */}
                 {showConversations && (
-                    <Flex flex={30} gap={2} flexDirection={"column"} maxW={{ sm: "250px", md: "full" }} mx={"auto"}>
-                        <Text fontWeight={700} color={useColorModeValue("gray.600", "gray.400")}>
+                    <Flex
+                        flex={30}
+                        gap={2}
+                        flexDirection={"column"}
+                        maxW={{ sm: "250px", md: "full" }}
+                        mx={"auto"}
+                        ml={{ base: "-1", md: "0" }}
+                        borderRadius={"lg"}
+                        boxShadow={"md"}
+                        p={4}
+                    >
+                        <Text fontWeight={700} fontSize="lg" color={useColorModeValue("gray.600", "gray.400")}>
                             Your Conversations
                         </Text>
 
                         {loadingConversations &&
                             [0, 1, 2, 3, 4].map((_, i) => (
-                                <Flex key={i} gap={4} alignItems={"center"} p={"1"} borderRadius={"md"}>
+                                <Flex
+                                    key={i}
+                                    gap={4}
+                                    alignItems={"center"}
+                                    p={"1"}
+                                    borderRadius={"md"}
+                                    _hover={{ bg: useColorModeValue("gray.100", "gray.700") }}
+                                    transition="background 0.2s"
+                                >
                                     <Box>
                                         <SkeletonCircle size={"10"} />
                                     </Box>
-                                    <Flex w={"full"} flexDirection={"column"} gap={3}>
+                                    <Flex w={"full"} flexDirection={"column"} gap={1}>
                                         <Skeleton h={"10px"} w={"80px"} />
                                         <Skeleton h={"8px"} w={"90%"} />
                                     </Flex>
@@ -205,31 +220,57 @@ const ChatPage = () => {
 
                         {!loadingConversations &&
                             conversations.map((conversation) => (
-                                <Conversation
+                                <Flex
                                     key={conversation._id}
-                                    isOnline={onlineUsers.includes(conversation.participants[0]._id)}
-                                    conversation={conversation}
-                                    onClick={handleConversationClick} // Pass click handler to Conversation
-                                />
+                                    alignItems={"center"}
+                                    p={2}
+                                    borderRadius={"md"}
+                                    _hover={{ bg: useColorModeValue("gray.100", "gray.700"), cursor: "pointer" }}
+                                    transition="background 0.2s"
+                                    onClick={() => handleConversationClick(conversation)}
+                                >
+                                    <Box>
+                                        <Image
+                                            src={conversation.participants[0].profilePic} // Ensure this URL is valid
+                                            alt={`${conversation.participants[0].username}'s profile`}
+                                            borderRadius="full"
+                                            boxSize="40px"
+                                            objectFit="cover"
+                                            fallbackSrc="path/to/default-avatar.png" // Provide a fallback image path
+                                            onError={(e) => {
+                                                e.target.onerror = null; // Prevent looping
+                                                e.target.src = "path/to/default-avatar.png"; // Set fallback image
+                                            }}
+                                        />
+                                    </Box>
+                                    <Box ml={2}>
+                                        <Text fontWeight={700}>{conversation.participants[0].username}</Text>
+                                        <Text fontSize="sm" color={useColorModeValue("gray.500", "gray.300")}>
+                                            {conversation.lastMessage.text}
+                                        </Text>
+                                    </Box>
+                                    {onlineUsers.includes(conversation.participants[0]._id) && (
+                                        <Box
+                                            bg="green.500"
+                                            borderRadius="full"
+                                            boxSize={3}
+                                            ml={2}
+                                            borderWidth={2}
+                                            borderColor="white"
+                                        />
+                                    )}
+                                </Flex>
                             ))}
                     </Flex>
                 )}
-
-                {selectedConversation._id && !showConversations && <MessageContainer />}
-                {/* Show placeholder if no conversation is selected */}
-                {!selectedConversation._id && showConversations && (
-                    <Flex
-                        flex={70}
-                        borderRadius={"md"}
-                        p={2}
-                        flexDir={"column"}
-                        alignItems={"center"}
-                        justifyContent={"center"}
-                        height={"400px"}
-                    >
-                        <GiConversation size={100} />
-                        <Text fontSize={20}>Select a conversation to start messaging</Text>
-                    </Flex>
+                {/* Message Container */}
+                {!showConversations && selectedConversation._id && (
+                    <MessageContainer
+               
+                        selectedConversation={selectedConversation}
+                        socket={socket}
+                        setShowConversations={setShowConversations}
+                    />
                 )}
             </Flex>
         </Box>

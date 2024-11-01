@@ -6,7 +6,7 @@ const SuggestedUser = ({ user }) => {
 	const { handleFollowUnfollow, following, updating } = useFollowUnfollow(user);
 
 	return (
-		<Flex gap={2} justifyContent={"space-between"} alignItems={"center"}>
+		<Flex gap={2} justifyContent={"space-between"} alignItems={"center"} mt={4}>
 			{/* left side */}
 			<Flex gap={2} as={Link} to={`${user.username}`}>
 				<Avatar src={user.profilePic} />

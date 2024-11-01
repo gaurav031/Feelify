@@ -1,3 +1,4 @@
+// postRoutes.js
 import express from "express";
 import {
 	createPost,
@@ -7,6 +8,7 @@ import {
 	replyToPost,
 	getFeedPosts,
 	getUserPosts,
+	searchPosts, // Import the new search function
 } from "../controllers/postController.js";
 import protectRoute from "../middlewares/protectRoute.js";
 
@@ -19,5 +21,6 @@ router.post("/create", protectRoute, createPost);
 router.delete("/:id", protectRoute, deletePost);
 router.put("/like/:id", protectRoute, likeUnlikePost);
 router.put("/reply/:id", protectRoute, replyToPost);
+router.get("/search", protectRoute, searchPosts); // Add this line for search
 
 export default router;

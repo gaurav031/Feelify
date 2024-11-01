@@ -20,6 +20,8 @@ import { useSetRecoilState } from "recoil";
 import authScreenAtom from "../atoms/authAtom";
 import useShowToast from "../hooks/useShowToast";
 import userAtom from "../atoms/userAtom";
+import { Image } from "@chakra-ui/react";
+import logo from '../assets/images/logo.png';
 
 export default function SignupCard() {
 	const [showPassword, setShowPassword] = useState(false);
@@ -60,15 +62,15 @@ export default function SignupCard() {
 	return (
 		<Flex align={"center"} justify={"center"}>
 			<Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
-				<Stack align={"center"}>
-					<Heading fontSize={"4xl"} textAlign={"center"}>
-						Sign up
-					</Heading>
-				</Stack>
+				
 				<Box rounded={"lg"} bg={useColorModeValue("white", "gray.dark")} boxShadow={"lg"} p={8}>
 					<Stack spacing={4}>
+					<Stack align={"center"}>
+									<Image src={logo} alt="Logo" boxSize="100px" objectFit="cover" />
+								</Stack>
 						<HStack>
 							<Box>
+								
 								<FormControl isRequired>
 									<FormLabel>Full name</FormLabel>
 									<Input

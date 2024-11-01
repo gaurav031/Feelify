@@ -34,7 +34,7 @@ const HomePage = () => {
 	}, [showToast, setPosts]);
 
 	return (
-		<Flex gap="10" alignItems="flex-start" direction={{ base: "column", md: "row" }}>
+		<Flex gap="10" alignItems="flex-start" direction={{ base: "column", md: "row" }}  mt={-10} >
 			<Box flex={70}>
 				{!loading && posts.length === 0 && (
 					<>
@@ -56,7 +56,7 @@ const HomePage = () => {
 					<React.Fragment key={post._id}>
 						<Post post={post} postedBy={post.postedBy} />
 						{/* Render SuggestedUsers after the 2nd post */}
-						{index === 1 && (
+						{index === 0  && (
 							<Box display={{ base: "block", md: "none" }}>
 								<SuggestedUsers />
 							</Box>
