@@ -23,10 +23,13 @@ const Header = () => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const [searchTerm, setSearchTerm] = useState("");
 
+	const handleSearchRedirect = () => {
+		navigate(`/search`);
+	};
 
 	return (
 		<>
-			<Flex justifyContent={"space-between"} mt={6} mb="12">
+			<Flex justifyContent="space-between" mt={6} mb={12}>
 				<Link as={RouterLink} to="/" display={{ base: "none", md: "flex" }}>
 					<AiFillHome size={24} />
 				</Link>
@@ -42,18 +45,10 @@ const Header = () => {
 				</Text>
 
 				{user ? (
-					<Flex alignItems={"center"} gap={4}>
-						{/* <Input
-							placeholder="Search for a post..."
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-						/> */}
-						<Link as={RouterLink}  to={`/search`}>
-						<SearchIcon />
-						</Link>
-						{/* <Button size={"sm"} onClick={handleSearch}>
-							
-						</Button> */}
+					<Flex alignItems="center" gap={4}>
+						<Button onClick={handleSearchRedirect}>
+							<SearchIcon />
+						</Button>
 						<Button onClick={onOpen} display={{ base: "none", md: "flex" }} height="25px" width="3px">
 							<AddIcon />
 						</Button>
@@ -66,51 +61,53 @@ const Header = () => {
 						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/settings`}>
 							<MdOutlineSettings size={20} />
 						</Link>
-						<Button size={"xs"} onClick={logout}>
+						<Button size="xs" onClick={logout}>
 							<FiLogOut size={20} />
 						</Button>
 					</Flex>
 				) : (
 					<Flex gap={4}>
-						<Link as={RouterLink} to={"/auth"} onClick={() => setAuthScreen("login")}>
+						<Link as={RouterLink} to="/auth" onClick={() => setAuthScreen("login")}>
 							Login
 						</Link>
-						<Link as={RouterLink} to={"/auth"} onClick={() => setAuthScreen("signup")}>
+						<Link as={RouterLink} to="/auth" onClick={() => setAuthScreen("signup")}>
 							Sign up
 						</Link>
 					</Flex>
 				)}
 
 				{/* Mobile Bottom Navigation */}
-				<Box
-					display={{ base: "flex", md: "none" }}
-					position="fixed"
-					bottom={0}
-					left={0}
-					right={0}
-					bg={colorMode === "dark" ? "black" : "white"}
-					borderTop="1px solid"
-					borderColor="gray.200"
-					justifyContent="space-around"
-					p={2}
-					zIndex={1000}
-				>
-					<Link as={RouterLink} to="/">
-						<AiFillHome size={24} />
-					</Link>
-					<Link as={RouterLink} to="/chat">
-						<BsFillChatQuoteFill size={24} />
-					</Link>
-					<Button onClick={onOpen}>
-						<AddIcon />
-					</Button>
-					<Link as={RouterLink} to="/settings">
-						<MdOutlineSettings size={24} />
-					</Link>
-					<Link as={RouterLink} to={`/${user ? user.username : "/auth"}`}>
-						<RxAvatar size={24} />
-					</Link>
-				</Box>
+				{user && (
+					<Box
+						display={{ base: "flex", md: "none" }}
+						position="fixed"
+						bottom={0}
+						left={0}
+						right={0}
+						bg={colorMode === "dark" ? "black" : "white"}
+						borderTop="1px solid"
+						borderColor="gray.200"
+						justifyContent="space-around"
+						p={2}
+						zIndex={1000}
+					>
+						<Link as={RouterLink} to="/">
+							<AiFillHome size={24} />
+						</Link>
+						<Link as={RouterLink} to="/chat">
+							<BsFillChatQuoteFill size={24} />
+						</Link>
+						<Button onClick={onOpen}>
+							<AddIcon />
+						</Button>
+						<Link as={RouterLink} to="/settings">
+							<MdOutlineSettings size={24} />
+						</Link>
+						<Link as={RouterLink} to={`/${user.username}`}>
+							<RxAvatar size={24} />
+						</Link>
+					</Box>
+				)}
 			</Flex>
 
 			{/* Pass the modal state to CreatePost */}
