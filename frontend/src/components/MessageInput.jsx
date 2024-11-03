@@ -21,7 +21,7 @@ import { useRecoilValue, useSetRecoilState } from "recoil";
 import { BsFillImageFill } from "react-icons/bs";
 import usePreviewImg from "../hooks/usePreviewImg";
 
-const MessageInput = ({ setMessages }) => {
+const MessageInput = ({ setMessages ,isKeyboardOpen }) => {
 	const [messageText, setMessageText] = useState("");
 	const showToast = useShowToast();
 	const selectedConversation = useRecoilValue(selectedConversationAtom);
@@ -82,7 +82,7 @@ const MessageInput = ({ setMessages }) => {
 		}
 	};
 	return (
-		<Flex gap={2} alignItems={"center"}>
+		<Flex gap={2} alignItems={"center"} bottom={isKeyboardOpen ? "0" : "initial"}>
 			<form onSubmit={handleSendMessage} style={{ flex: 95 }}>
 				<InputGroup>
 					<Input

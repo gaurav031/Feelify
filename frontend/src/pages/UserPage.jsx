@@ -59,8 +59,11 @@ const UserPage = () => {
 			{/* {posts.map((post) => (
 				<Post key={post._id} post={post} postedBy={post.postedBy}  />
 			))} */}
-			{posts.map((post) => (
-				<Box key={post._id} mb={40}> {/* Adjust the margin as needed */}
+			{posts.map((post, index) => (
+				<Box
+					key={post._id}
+					mb={index === posts.length - 1 ? 20 : 0} // Apply mb={20} for the last post
+				>
 					<Post post={post} postedBy={post.postedBy} />
 				</Box>
 			))}

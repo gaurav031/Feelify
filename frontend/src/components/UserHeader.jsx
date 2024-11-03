@@ -29,7 +29,7 @@ const UserHeader = ({ user }) => {
 	};
 
 	return (
-		<VStack gap={4} alignItems={"start"}>
+		<VStack gap={4} alignItems={"start"} >
 			<Flex justifyContent={"space-between"} w={"full"}>
 				<Box>
 					<Text fontSize={"2xl"} fontWeight={"bold"}>

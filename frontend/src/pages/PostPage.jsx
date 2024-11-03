@@ -16,7 +16,7 @@ const PostPage = () => {
 	const [posts, setPosts] = useRecoilState(postsAtom);
 	const showToast = useShowToast();
 	const { pid } = useParams();
-	const currentUser = useRecoilValue(userAtom);
+	const currentUser  = useRecoilValue(userAtom);
 	const navigate = useNavigate();
 
 	const currentPost = posts[0];
@@ -86,7 +86,7 @@ const PostPage = () => {
 						{formatDistanceToNow(new Date(currentPost.createdAt))} ago
 					</Text>
 
-					{currentUser?._id === user._id && (
+					{currentUser ?._id === user._id && (
 						<DeleteIcon size={20} cursor={"pointer"} onClick={handleDeletePost} />
 					)}
 				</Flex>
@@ -94,14 +94,22 @@ const PostPage = () => {
 
 			<Text my={3}>{currentPost.text}</Text>
 
+			{/* Render image if it exists */}
 			{currentPost.img && (
 				<Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
 					<Image src={currentPost.img} w={"full"} />
 				</Box>
 			)}
 
+			{/* Render video if it exists */}
+			{currentPost.video && (
+				<Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
+					<video src={currentPost.video} width={"100%"} controls />
+				</Box>
+			)}
+
 			<Flex gap={3} my={3}>
-				<Actions post={currentPost} />
+				 <Actions post={currentPost} />
 			</Flex>
 
 			<Divider my={4} />
@@ -120,6 +128,7 @@ const PostPage = () => {
 					key={reply._id}
 					reply={reply}
 					lastReply={reply._id === currentPost.replies[currentPost.replies.length - 1]._id}
+					
 				/>
 			))}
 		</>

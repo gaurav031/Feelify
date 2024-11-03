@@ -59,7 +59,7 @@ const Post = ({ post, postedBy }) => {
 
 	if (!user) return null;
 	return (
-		<Link to={`/${user.username}/post/${post._id}`} >
+		<Link to={`/${user.username}/post/${post._id}`}  >
 			<Flex gap={3} mb={4} py={5}>
 				<Flex flexDirection={"column"} alignItems={"center"}>
 					<Avatar
@@ -136,6 +136,15 @@ const Post = ({ post, postedBy }) => {
 					</Flex>
 
 					<Text fontSize={"sm"}>{post.text}</Text>
+
+					{/* Add video rendering logic */}
+					{post.video && (
+						<Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
+							<video src={post.video} width={"100%"} controls />
+						</Box>
+					)}
+
+					{/* Keep the image rendering logic */}
 					{post.img && (
 						<Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
 							<Image src={post.img} w={"full"} />

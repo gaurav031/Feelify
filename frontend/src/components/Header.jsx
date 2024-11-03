@@ -51,25 +51,33 @@ const Header = () => {
 				</Text>
 
 				{user ? (
-					<Flex alignItems="center" gap={4}>
-						<Button onClick={handleSearchRedirect}>
-							<SearchIcon />
-						</Button>
-						<Button onClick={onOpen} display={{ base: "none", md: "flex" }} height="25px" width="3px">
-							<AddIcon />
-						</Button>
-						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/${user.username}`}>
-							<RxAvatar size={24} />
-						</Link>
-						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/chat`}>
-							<BsFillChatQuoteFill size={20} />
-						</Link>
-						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/settings`}>
-							<MdOutlineSettings size={20} />
-						</Link>
-						<Button size="xs" onClick={logout}>
-							<FiLogOut size={20} />
-						</Button>
+					  <Flex alignItems="center" gap={4}>
+					  <Button onClick={handleSearchRedirect} aria-label="Search">
+						<SearchIcon />
+					  </Button>
+					  <Button 
+						onClick={onOpen} 
+						display={{ base: "none", md: "flex" }} 
+						height="40px" // Adjust height for better alignment
+						width="40px"  // Adjust width for consistent button size
+						borderRadius="50%" // Make the button circular
+						_hover={{ bg: "gray.200" }} // Add hover effect
+						aria-label="Add"
+					  >
+						<AddIcon />
+					  </Button>
+					  <Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/${user.username}`}>
+						<RxAvatar size={24} />
+					  </Link>
+					  <Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/chat`}>
+						<BsFillChatQuoteFill size={20} />
+					  </Link>
+					  <Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/settings`}>
+						<MdOutlineSettings size={20} />
+					  </Link>
+					  <Button size="xs" onClick={logout} aria-label="Logout">
+						<FiLogOut size={20} />
+					  </Button>
 					</Flex>
 				) : (
 					<Flex gap={4}>
@@ -85,34 +93,35 @@ const Header = () => {
 				{/* Mobile Bottom Navigation */}
 				{user && (
 					<Box
-						display={{ base: "flex", md: "none" }}
-						position="fixed"
-						bottom={0}
-						left={0}
-						right={0}
-						bg={colorMode === "dark" ? "black" : "white"}
-						borderTop="1px solid"
-						borderColor="gray.200"
-						justifyContent="space-around"
-						p={2}
-						zIndex={1000}
-					>
-						<Link as={RouterLink} to="/">
-							<AiFillHome size={24} />
-						</Link>
-						<Link as={RouterLink} to="/chat">
-							<BsFillChatQuoteFill size={24} />
-						</Link>
-						<Button onClick={onOpen}>
-							<AddIcon />
-						</Button>
-						<Link as={RouterLink} to="/settings">
-							<MdOutlineSettings size={24} />
-						</Link>
-						<Link as={RouterLink} to={`/${user.username}`}>
-							<RxAvatar size={24} />
-						</Link>
-					</Box>
+					display={{ base: "flex", md: "none" }} // Show only on mobile devices
+					position="fixed"
+					bottom={0}
+					left={0}
+					right={0}
+					bg={colorMode === "dark" ? "black" : "white"}
+					borderTop="1px solid"
+					borderColor="gray.200"
+					justifyContent="space-around"
+					alignItems="center" // Center the items vertically
+					p={2}
+					zIndex={1000}
+				  >
+					<Link as={RouterLink} to="/" aria-label="Home">
+					  <AiFillHome size={24} />
+					</Link>
+					<Link as={RouterLink} to="/chat" aria-label="Chat">
+					  <BsFillChatQuoteFill size={24} />
+					</Link>
+					<Button onClick={onOpen} aria-label="Add">
+					  <AddIcon boxSize={6} /> {/* Use boxSize for consistent sizing */}
+					</Button>
+					<Link as={RouterLink} to="/settings" aria-label="Settings">
+					  <MdOutlineSettings size={24} />
+					</Link>
+					<Link as={RouterLink} to={`/${user.username}`} aria-label="Profile">
+					  <RxAvatar size={24} />
+					</Link>
+				  </Box>
 				)}
 			</Flex>
 

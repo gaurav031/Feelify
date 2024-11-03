@@ -3,41 +3,49 @@ import User from "../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
 
 const createPost = async (req, res) => {
-	try {
-		const { postedBy, text } = req.body;
-		let { img } = req.body;
+    try {
+        const { postedBy, text } = req.body; // Do not destructure img and video from req.body
+        let img, video; // Initialize variables
 
-		if (!postedBy || !text) {
-			return res.status(400).json({ error: "Postedby and text fields are required" });
-		}
+        if (!postedBy || !text) {
+            return res.status(400).json({ error: "Postedby and text fields are required" });
+        }
 
-		const user = await User.findById(postedBy);
-		if (!user) {
-			return res.status(404).json({ error: "User not found" });
-		}
+        const user = await User.findById(postedBy);
+        if (!user) {
+            return res.status(404).json({ error: "User  not found" });
+        }
 
-		if (user._id.toString() !== req.user._id.toString()) {
-			return res.status(401).json({ error: "Unauthorized to create post" });
-		}
+        if (user._id.toString() !== req.user._id.toString()) {
+            return res.status(401).json({ error: "Unauthorized to create post" });
+        }
 
-		const maxLength = 500;
-		if (text.length > maxLength) {
-			return res.status(400).json({ error: `Text must be less than ${maxLength} characters` });
-		}
+        const maxLength = 500;
+        if (text.length > maxLength) {
+            return res.status(400).json({ error: `Text must be less than ${maxLength} characters` });
+        }
 
-		if (img) {
-			const uploadedResponse = await cloudinary.uploader.upload(img);
-			img = uploadedResponse.secure_url;
-		}
+        // Handle image upload if present
+        if (req.files && req.files.img) {
+            const uploadedResponse = await cloudinary.uploader.upload(req.files.img[0].path);
+            img = uploadedResponse.secure_url;
+        }
 
-		const newPost = new Post({ postedBy, text, img });
-		await newPost.save();
+        // Handle video upload if present
+        if (req.files && req.files.video) {
+            const uploadedResponse = await cloudinary.uploader.upload(req.files.video[0].path, {
+                resource_type: "video", // Specify the resource type as video
+            });
+            video = uploadedResponse.secure_url;
+        }
 
-		res.status(201).json(newPost);
-	} catch (err) {
-		res.status(500).json({ error: err.message });
-		console.log(err);
-	}
+        const newPost = new Post({ postedBy, text, img, video }); // Include img and video in the post model
+        await newPost.save();
+        res.status(201).json(newPost);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+        console.log(err);
+    }
 };
 
 const getPost = async (req, res) => {

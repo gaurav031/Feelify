@@ -34,7 +34,7 @@ const HomePage = () => {
 	}, [showToast, setPosts]);
 
 	return (
-		<Flex gap="10" alignItems="flex-start" direction={{ base: "column", md: "row" }}  mt={-10} mb={80} >
+		<Flex gap="10" alignItems="flex-start" direction={{ base: "column", md: "row" }} mt={-10} >
 			<Box flex={70}>
 				{!loading && posts.length === 0 && (
 					<>
@@ -55,14 +55,21 @@ const HomePage = () => {
 				{posts.map((post, index) => (
 					<React.Fragment key={post._id}>
 						<Post post={post} postedBy={post.postedBy} />
+
 						{/* Render SuggestedUsers after the 2nd post */}
-						{index === 0  && (
+						{index === 0 && (
 							<Box display={{ base: "block", md: "none" }}>
 								<SuggestedUsers />
 							</Box>
 						)}
+
+						{/* Add margin-bottom of 20px if this is the last post */}
+						{index === posts.length - 1 && (
+							<Box mb="100px" />
+						)}
 					</React.Fragment>
 				))}
+
 			</Box>
 			{/* Always show SuggestedUsers on larger screens */}
 			<Box flex={300} display={{ base: "none", md: "block" }}>
