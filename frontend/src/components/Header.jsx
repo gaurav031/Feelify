@@ -1,36 +1,53 @@
-import { useLocation } from "react-router-dom"; // Import useLocation
-import { Button, Flex, Box, Link, useColorMode, Text, Input } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate, Link as RouterLink } from "react-router-dom";
+import { Button, Flex, Box, Link, useColorMode, Text, Badge } from "@chakra-ui/react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
-import { AiFillHome } from "react-icons/ai";
-import { RxAvatar } from "react-icons/rx";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { FiLogOut } from "react-icons/fi";
-import useLogout from "../hooks/useLogout";
 import authScreenAtom from "../atoms/authAtom";
+import { AiFillHome, AiFillNotification } from "react-icons/ai";
+import { RxAvatar } from "react-icons/rx";
+import { FiLogOut } from "react-icons/fi";
 import { BsFillChatQuoteFill } from "react-icons/bs";
-import { MdOutlineSettings } from "react-icons/md";
+import { MdNotifications, MdNotificationsActive, MdOutlineSettings } from "react-icons/md";
 import { AddIcon, SearchIcon } from "@chakra-ui/icons";
 import { useDisclosure } from "@chakra-ui/react";
-import CreatePost from "./CreatePost"; // Import the CreatePost component
-import { useState } from "react"; // Import useState for search functionality
+import axios from "axios";
+import useLogout from "../hooks/useLogout";
+import CreatePost from "./CreatePost";
+import { FaRegHeart } from "react-icons/fa6";
 
 const Header = () => {
-	const navigate = useNavigate(); // Initialize useNavigate
+	const navigate = useNavigate();
+	const location = useLocation();
 	const { colorMode, toggleColorMode } = useColorMode();
 	const user = useRecoilValue(userAtom);
 	const logout = useLogout();
 	const setAuthScreen = useSetRecoilState(authScreenAtom);
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const [searchTerm, setSearchTerm] = useState("");
+	const [unreadCount, setUnreadCount] = useState(0);
+
+	// Fetch notifications to get the count of unread notifications
+	useEffect(() => {
+		const fetchUnreadNotifications = async () => {
+			try {
+				const response = await axios.get('/api/notifications');
+				const unread = response.data.filter(notification => !notification.isRead).length;
+				setUnreadCount(unread);
+			} catch (error) {
+				console.error("Error fetching notifications:", error);
+			}
+		};
+
+		fetchUnreadNotifications();
+	}, []);
 
 	const handleSearchRedirect = () => {
 		navigate(`/search`);
 	};
-	// Check if current path is "/chat" and viewport is small
+
 	const isChatPageOnMobile = location.pathname === "/chat" && window.innerWidth <= 768;
 
-	// Don't render Header in mobile view if on the chat page
 	if (isChatPageOnMobile) return null;
 
 	return (
@@ -51,33 +68,67 @@ const Header = () => {
 				</Text>
 
 				{user ? (
-					  <Flex alignItems="center" gap={4}>
-					  <Button onClick={handleSearchRedirect} aria-label="Search">
-						<SearchIcon />
-					  </Button>
-					  <Button 
-						onClick={onOpen} 
-						display={{ base: "none", md: "flex" }} 
-						height="40px" // Adjust height for better alignment
-						width="40px"  // Adjust width for consistent button size
-						borderRadius="50%" // Make the button circular
-						_hover={{ bg: "gray.200" }} // Add hover effect
-						aria-label="Add"
-					  >
-						<AddIcon />
-					  </Button>
-					  <Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/${user.username}`}>
-						<RxAvatar size={24} />
-					  </Link>
-					  <Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/chat`}>
-						<BsFillChatQuoteFill size={20} />
-					  </Link>
-					  <Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/settings`}>
-						<MdOutlineSettings size={20} />
-					  </Link>
-					  <Button size="xs" onClick={logout} aria-label="Logout">
-						<FiLogOut size={20} />
-					  </Button>
+					<Flex alignItems="center" gap={4}>
+						<Button onClick={handleSearchRedirect} aria-label="Search">
+							<SearchIcon />
+						</Button>
+						<Button
+							onClick={onOpen}
+							display={{ base: "none", md: "flex" }}
+							height="40px"
+							width="40px"
+							borderRadius="50%"
+							_hover={{ bg: "gray.200" }}
+							aria-label="Add"
+						>
+							<AddIcon />
+						</Button>
+
+						{/* Notifications Icon with Unread Badge */}
+						{/* Notifications Icon with Unread Badge */}
+						<Link
+							as={RouterLink}
+							to={`/notification`}
+							position="relative"
+							
+							_hover={{ color: colorMode === "dark" ? "gray.300" : "gray.600" }}
+						>
+							<FaRegHeart
+								size={24}
+								color={colorMode === "dark" ? "white" : "black"}
+							/>
+							{unreadCount > 0 && (
+								<Text
+									position="absolute"
+									top="-2px"
+									right="-2px"
+									fontSize="0.7em"
+									fontWeight="bold"
+									color="white"
+									bg="red"
+									borderRadius="full"
+									width="16px"
+									height="16px"
+									display="flex"
+									alignItems="center"
+									justifyContent="center"
+								>
+									{unreadCount}
+								</Text>
+							)}
+						</Link>
+						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/${user.username}`}>
+							<RxAvatar size={24} />
+						</Link>
+						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/chat`}>
+							<BsFillChatQuoteFill size={20} />
+						</Link>
+						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/settings`}>
+							<MdOutlineSettings size={20} />
+						</Link>
+						<Button size="xs" onClick={logout} aria-label="Logout">
+							<FiLogOut size={20} />
+						</Button>
 					</Flex>
 				) : (
 					<Flex gap={4}>
@@ -89,11 +140,12 @@ const Header = () => {
 						</Link>
 					</Flex>
 				)}
+			</Flex>
 
-				{/* Mobile Bottom Navigation */}
-				{user && (
-					<Box
-					display={{ base: "flex", md: "none" }} // Show only on mobile devices
+			{/* Mobile Bottom Navigation */}
+			{user && (
+				<Box
+					display={{ base: "flex", md: "none" }}
 					position="fixed"
 					bottom={0}
 					left={0}
@@ -102,28 +154,27 @@ const Header = () => {
 					borderTop="1px solid"
 					borderColor="gray.200"
 					justifyContent="space-around"
-					alignItems="center" // Center the items vertically
+					alignItems="center"
 					p={2}
 					zIndex={1000}
-				  >
+				>
 					<Link as={RouterLink} to="/" aria-label="Home">
-					  <AiFillHome size={24} />
+						<AiFillHome size={24} />
 					</Link>
 					<Link as={RouterLink} to="/chat" aria-label="Chat">
-					  <BsFillChatQuoteFill size={24} />
+						<BsFillChatQuoteFill size={24} />
 					</Link>
 					<Button onClick={onOpen} aria-label="Add">
-					  <AddIcon boxSize={6} /> {/* Use boxSize for consistent sizing */}
+						<AddIcon boxSize={6} />
 					</Button>
 					<Link as={RouterLink} to="/settings" aria-label="Settings">
-					  <MdOutlineSettings size={24} />
+						<MdOutlineSettings size={24} />
 					</Link>
 					<Link as={RouterLink} to={`/${user.username}`} aria-label="Profile">
-					  <RxAvatar size={24} />
+						<RxAvatar size={24} />
 					</Link>
-				  </Box>
-				)}
-			</Flex>
+				</Box>
+			)}
 
 			{/* Pass the modal state to CreatePost */}
 			<CreatePost isOpen={isOpen} onClose={onClose} />

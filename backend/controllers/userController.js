@@ -4,30 +4,41 @@ import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
+import Notification from "../models/notificationModel.js";
 
 const getUserProfile = async (req, res) => {
-	// We will fetch user profile either with username or userId
-	// query is either username or userId
-	const { query } = req.params;
+    // Extract query from request parameters
+    const { query } = req.params;
 
-	try {
-		let user;
+    try {
+        let user;
 
-		// query is userId
-		if (mongoose.Types.ObjectId.isValid(query)) {
-			user = await User.findOne({ _id: query }).select("-password").select("-updatedAt");
-		} else {
-			// query is username
-			user = await User.findOne({ username: query }).select("-password").select("-updatedAt");
-		}
+        // Check if query is a valid ObjectId or username
+        const isObjectId = mongoose.Types.ObjectId.isValid(query);
 
-		if (!user) return res.status(404).send(); // Do not send error message
+        // Create query object based on the type of query
+        const queryObject = isObjectId ? { _id: query } : { username: query };
 
-		res.status(200).json(user);
-	} catch (err) {
-		console.log("Error in getUserProfile: ", err.message); // Log error
-		res.status(500).send(); // Do not send error message
-	}
+        // Fetch the user, excluding password and updatedAt fields
+        user = await User.findOne(queryObject).select("-password -updatedAt");
+
+        // If user is not found, return 404 with a message
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Log successful retrieval of user profile
+        // console.log("User profile retrieved successfully:", user.username);
+
+        // Return the user profile
+        return res.status(200).json(user);
+    } catch (err) {
+        // Log the error for debugging
+        console.error("Error in getUserProfile:", err.message);
+
+        // Return a 500 error response with a generic message
+        return res.status(500).json({ message: "An error occurred while fetching the user profile." });
+    }
 };
 
 const signupUser = async (req, res) => {
@@ -109,34 +120,64 @@ const logoutUser = (req, res) => {
 };
 
 const followUnFollowUser = async (req, res) => {
-	try {
-		const { id } = req.params;
-		const userToModify = await User.findById(id);
-		const currentUser = await User.findById(req.user._id);
+    try {
+        const { id } = req.params;
+        
+        if (id === req.user._id.toString()) {
+            return res.status(400).send(); // User cannot follow themselves
+        }
 
-		if (id === req.user._id.toString())
-			return res.status(400).send(); // Do not send error message
+        const [userToModify, currentUser] = await Promise.all([
+            User.findById(id),
+            User.findById(req.user._id)
+        ]);
 
-		if (!userToModify || !currentUser) return res.status(400).send(); // Do not send error message
+        // Check if users exist and have required fields
+        if (!userToModify || !userToModify.username || !currentUser || !currentUser.username) {
+            console.error("User validation failed: Missing username or user not found");
+            return res.status(404).json({ message: "User not found or missing username" });
+        }
 
-		const isFollowing = currentUser.following.includes(id);
+        const isFollowing = currentUser.following.includes(id);
 
-		if (isFollowing) {
-			// Unfollow user
-			await User.findByIdAndUpdate(id, { $pull: { followers: req.user._id } });
-			await User.findByIdAndUpdate(req.user._id, { $pull: { following: id } });
-			res.status(200).json({ message: "User unfollowed successfully" });
-		} else {
-			// Follow user
-			await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } });
-			await User.findByIdAndUpdate(req.user._id, { $push: { following: id } });
-			res.status(200).json({ message: "User followed successfully" });
-		}
-	} catch (err) {
-		console.log("Error in followUnFollowUser: ", err.message); // Log error
-		res.status(500).send(); // Do not send error message
-	}
+        if (isFollowing) {
+            // Unfollow the user
+            userToModify.followers.pull(req.user._id);
+            currentUser.following.pull(id);
+            await Promise.all([userToModify.save(), currentUser.save()]);
+
+            res.status(200).json({ message: "User unfollowed successfully" });
+        } else {
+            // Follow the user
+            userToModify.followers.push(req.user._id);
+            currentUser.following.push(id);
+            await Promise.all([userToModify.save(), currentUser.save()]);
+
+            // Create a notification for the user being followed
+            const newNotification = new Notification({
+                userId: userToModify._id,
+                senderId: req.user._id,
+                type: 'follow',
+                message: `${req.user.name} started following you.`,
+            });
+            await newNotification.save();
+
+            // Emit a socket event to notify the user being followed
+            if (req.io) {
+                req.io.to(userToModify._id.toString()).emit("userFollowed", {
+                    userId: req.user._id,
+                    message: `${req.user.name} started following you.`,
+                });
+            }
+
+            res.status(200).json({ message: "User followed successfully" });
+        }
+    } catch (err) {
+        console.error("Error in followUnFollowUser:", err);
+        res.status(500).send(); // Internal server error without exposing details
+    }
 };
+
 
 const updateUser = async (req, res) => {
 	const { name, email, username, password, bio } = req.body;

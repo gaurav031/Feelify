@@ -17,7 +17,7 @@ import {
     useColorModeValue,
     Spinner,
 } from "@chakra-ui/react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import usePreviewImg from "../hooks/usePreviewImg";
 import { BsFillImageFill } from "react-icons/bs";
 import { IoMdVideocam } from "react-icons/io";
@@ -42,6 +42,21 @@ const CreatePost = ({ isOpen, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [posts, setPosts] = useRecoilState(postsAtom);
     const { username } = useParams();
+
+    // Reset state when modal is closed
+    const resetState = () => {
+        setPostText("");
+        setImgUrl("");
+        setVideoUrl("");
+        setSelectedVideoFile(null);
+        setRemainingChar(MAX_CHAR);
+    };
+
+    useEffect(() => {
+        if (!isOpen) {
+            resetState(); // Clear previous data when modal is closed
+        }
+    }, [isOpen]);
 
     const handleTextChange = (e) => {
         const inputText = e.target.value;
@@ -68,13 +83,15 @@ const CreatePost = ({ isOpen, onClose }) => {
         const formData = new FormData();
         formData.append('postedBy', user._id);
         formData.append('text', postText);
-        if (imgUrl) {
-            formData.append('img', imgUrl);
+        
+        // Append the actual file instead of imgUrl
+        if (imageRef.current.files[0]) {
+            formData.append('img', imageRef.current.files[0]);
         }
         if (selectedVideoFile) {
             formData.append('video', selectedVideoFile);
         }
-
+    
         try {
             const response = await fetch('/api/posts/create', {
                 method: 'POST',
@@ -87,6 +104,7 @@ const CreatePost = ({ isOpen, onClose }) => {
             }
             showToast("Success", "Post created successfully", "success");
             setPosts((prevPosts) => [data, ...prevPosts]);
+            resetState(); // Reset state after successful post creation
             onClose();
         } catch (error) {
             showToast("Error", error.message, "error");

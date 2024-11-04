@@ -7,6 +7,7 @@ const postSchema = mongoose.Schema(
 			ref: "User",
 			required: true,
 		},
+		
 		text: {
 			type: String,
 			maxLength: 500,
@@ -15,7 +16,7 @@ const postSchema = mongoose.Schema(
 			type: String,
 		},
 		video: {
-			type: String, // Add a video field
+			type: String, 
 		},
 		likes: {
 			// array of user ids
