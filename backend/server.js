@@ -7,6 +7,7 @@ import userRoutes from "./routes/userRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import storyRoutes from "./routes/storyRoutes.js"
 import { v2 as cloudinary } from "cloudinary";
 import job from "./cron/cron.js";
 import { createServer } from "http"; // Import the createServer function
@@ -42,6 +43,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/stories", storyRoutes);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === "production") {

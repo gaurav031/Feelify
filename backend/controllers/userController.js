@@ -22,24 +22,50 @@ const getUserProfile = async (req, res) => {
         // Fetch the user, excluding password and updatedAt fields
         user = await User.findOne(queryObject).select("-password -updatedAt");
 
-        // If user is not found, return 404 with a message
+        // If user is not found, return a 404 status code with an empty JSON object
         if (!user) {
-            return res.status(404).json({ message: "User not found." });
+            return res.status(404).json({});
         }
-
-        // Log successful retrieval of user profile
-        // console.log("User profile retrieved successfully:", user.username);
 
         // Return the user profile
         return res.status(200).json(user);
     } catch (err) {
-        // Log the error for debugging
-        console.error("Error in getUserProfile:", err.message);
-
-        // Return a 500 error response with a generic message
-        return res.status(500).json({ message: "An error occurred while fetching the user profile." });
+        // Return a 500 status code with an empty JSON object
+        return res.status(500).json({});
     }
 };
+const searchUser = async (req, res) => {
+    try {
+        // Extract search query from the request query parameters
+        const { query } = req.query;
+
+        if (!query) {
+            return res.status(400).json({ message: "Search query is required" });
+        }
+
+        // Perform a case-insensitive search for users by `username` or `name`
+        const users = await User.find({
+            $or: [
+                { username: { $regex: query, $options: "i" } }, // Case-insensitive search for username
+                { name: { $regex: query, $options: "i" } }      // Case-insensitive search for name
+            ]
+        }).select("-password -updatedAt -email"); // Exclude sensitive fields
+
+        // Check if users were found and return appropriate response
+        if (!users.length) {
+            return res.status(404).json({ message: "No users found" });
+        }
+
+        // Return the search results
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("Error in searchUser: ", error.message); // Log the error
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
 
 const signupUser = async (req, res) => {
 	try {
@@ -291,4 +317,5 @@ export {
 	getUserProfile,
 	getSuggestedUsers,
 	freezeAccount,
+	searchUser,
 };

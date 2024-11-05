@@ -170,15 +170,15 @@ const ChatPage = () => {
             onClick={handleBackClick}
             variant="ghost"
           />
-          <Avatar size="sm" name={currentUser.name} src={currentUser?.profilePic} ml={-5}/>
-          <Text fontWeight={500} fontSize="md" ml={-3}>
+          <Avatar size="sm" name={currentUser.name} src={currentUser?.profilePic} ml={-10}/>
+          <Text fontWeight={500} fontSize="md" ml={-1}>
             {currentUser.username}
           </Text>
         </>
         <Flex alignItems="center" gap={2}>
           <Input
-            width={170}
-            placeholder="Search for a user"
+            width={130}
+            placeholder="Search Here"
             onChange={(e) => setSearchText(e.target.value)}
             variant="filled"
           />
