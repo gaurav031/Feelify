@@ -8,6 +8,8 @@ import {
 	updateUser,
 	getSuggestedUsers,
 	freezeAccount,
+	getFollowers,
+	getFollowing,
 } from "../controllers/userController.js";
 import protectRoute from "../middlewares/protectRoute.js";
 
@@ -21,5 +23,7 @@ router.post("/logout", logoutUser);
 router.post("/follow/:id", protectRoute, followUnFollowUser); // Toggle state(follow/unfollow)
 router.put("/update/:id", protectRoute, updateUser);
 router.put("/freeze", protectRoute, freezeAccount);
+router.get("/:id/followers", getFollowers);
+router.get("/:id/following", getFollowing);
 
 export default router;

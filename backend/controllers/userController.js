@@ -106,35 +106,48 @@ const signupUser = async (req, res) => {
 	}
 };
 
+
 const loginUser = async (req, res) => {
 	try {
-		const { username, password } = req.body;
-		const user = await User.findOne({ username });
-		const isPasswordCorrect = await bcrypt.compare(password, user?.password || "");
-
-		if (!user || !isPasswordCorrect) return res.status(400).send(); // Do not send error message
-
-		if (user.isFrozen) {
-			user.isFrozen = false;
-			await user.save();
-		}
-
-		generateTokenAndSetCookie(user._id, res);
-
-		res.status(200).json({
-			_id: user._id,
-			name: user.name,
-			email: user.email,
-			username: user.username,
-			bio: user.bio,
-			profilePic: user.profilePic,
-		});
+	  const { username, password } = req.body;
+	  const user = await User.findOne({ username });
+  
+	  // Check if user exists
+	  if (!user) {
+		return res.status(404).json({ error: "User not found" }); // Changed "message" to "error"
+	  }
+  
+	  // Compare password
+	  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+  
+	  if (!isPasswordCorrect) {
+		return res.status(400).json({ error: "Incorrect password" }); // Changed "message" to "error"
+	  }
+  
+	  // If the user is frozen, unfreeze it
+	  if (user.isFrozen) {
+		user.isFrozen = false;
+		await user.save();
+	  }
+  
+	  // Generate token and set cookie
+	  generateTokenAndSetCookie(user._id, res);
+  
+	  // Respond with user data
+	  res.status(200).json({
+		_id: user._id,
+		name: user.name,
+		email: user.email,
+		username: user.username,
+		bio: user.bio,
+		profilePic: user.profilePic,
+	  });
 	} catch (error) {
-		console.log("Error in loginUser: ", error.message); // Log error
-		res.status(500).send(); // Do not send error message
+	  console.log("Error in loginUser: ", error.message); // Log error
+	  res.status(500).send(); // Internal server error
 	}
-};
-
+  };
+  
 const logoutUser = (req, res) => {
 	try {
 		res.cookie("jwt", "", { maxAge: 1 });
@@ -146,61 +159,91 @@ const logoutUser = (req, res) => {
 };
 
 const followUnFollowUser = async (req, res) => {
+	try {
+	  const { id } = req.params;
+  
+	  // Prevent a user from following themselves
+	  if (id === req.user._id.toString()) {
+		return res.status(400).json({ message: "You cannot follow yourself" });
+	  }
+  
+	  const [userToModify, currentUser] = await Promise.all([
+		User.findById(id),
+		User.findById(req.user._id),
+	  ]);
+  
+	  // Ensure both users exist
+	  if (!userToModify || !currentUser) {
+		return res.status(404).json({ message: "User not found" });
+	  }
+  
+	  // Check if the user is already following the target user
+	  const isFollowing = currentUser.following.includes(id);
+  
+	  if (isFollowing) {
+		// Unfollow the user
+		userToModify.followers.pull(req.user._id);
+		currentUser.following.pull(id);
+		await Promise.all([userToModify.save(), currentUser.save()]);
+  
+		res.status(200).json({ message: "User unfollowed successfully" });
+	  } else {
+		// Follow the user
+		userToModify.followers.push(req.user._id);
+		currentUser.following.push(id);
+		await Promise.all([userToModify.save(), currentUser.save()]);
+  
+		// Create and send a follow notification
+		const newNotification = new Notification({
+		  userId: userToModify._id,
+		  senderId: req.user._id,
+		  type: 'follow',
+		  message: `${req.user.name} started following you.`,
+		});
+		await newNotification.save();
+  
+		// Emit a socket event to notify the followed user
+		if (req.io) {
+		  req.io.to(userToModify._id.toString()).emit("userFollowed", {
+			userId: req.user._id,
+			message: `${req.user.name} started following you.`,
+		  });
+		}
+  
+		res.status(200).json({ message: "User followed successfully" });
+	  }
+	} catch (err) {
+	  console.error("Error in followUnFollowUser:", err);
+	  res.status(500).send(); // Internal server error
+	}
+  };
+  
+const getFollowers = async (req, res) => {
     try {
         const { id } = req.params;
-        
-        if (id === req.user._id.toString()) {
-            return res.status(400).send(); // User cannot follow themselves
+        const user = await User.findById(id).populate("followers", "name username profilePic");
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
         }
+        res.status(200).json(user.followers);
+		
+    } catch (error) {
+        console.error("Error in getFollowers: ", error.message);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
 
-        const [userToModify, currentUser] = await Promise.all([
-            User.findById(id),
-            User.findById(req.user._id)
-        ]);
-
-        // Check if users exist and have required fields
-        if (!userToModify || !userToModify.username || !currentUser || !currentUser.username) {
-            console.error("User validation failed: Missing username or user not found");
-            return res.status(404).json({ message: "User not found or missing username" });
+const getFollowing = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id).populate("following", "name username profilePic");
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
         }
-
-        const isFollowing = currentUser.following.includes(id);
-
-        if (isFollowing) {
-            // Unfollow the user
-            userToModify.followers.pull(req.user._id);
-            currentUser.following.pull(id);
-            await Promise.all([userToModify.save(), currentUser.save()]);
-
-            res.status(200).json({ message: "User unfollowed successfully" });
-        } else {
-            // Follow the user
-            userToModify.followers.push(req.user._id);
-            currentUser.following.push(id);
-            await Promise.all([userToModify.save(), currentUser.save()]);
-
-            // Create a notification for the user being followed
-            const newNotification = new Notification({
-                userId: userToModify._id,
-                senderId: req.user._id,
-                type: 'follow',
-                message: `${req.user.name} started following you.`,
-            });
-            await newNotification.save();
-
-            // Emit a socket event to notify the user being followed
-            if (req.io) {
-                req.io.to(userToModify._id.toString()).emit("userFollowed", {
-                    userId: req.user._id,
-                    message: `${req.user.name} started following you.`,
-                });
-            }
-
-            res.status(200).json({ message: "User followed successfully" });
-        }
-    } catch (err) {
-        console.error("Error in followUnFollowUser:", err);
-        res.status(500).send(); // Internal server error without exposing details
+        res.status(200).json(user.following);
+    } catch (error) {
+        console.error("Error in getFollowing: ", error.message);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 
@@ -318,4 +361,6 @@ export {
 	getSuggestedUsers,
 	freezeAccount,
 	searchUser,
+	getFollowers,
+	 getFollowing,
 };

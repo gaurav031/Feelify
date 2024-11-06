@@ -8,7 +8,7 @@ import {
 	replyToPost,
 	getFeedPosts,
 	getUserPosts,
-	searchPosts, // Import the new search function
+	searchPosts,
 } from "../controllers/postController.js";
 import protectRoute from "../middlewares/protectRoute.js";
 

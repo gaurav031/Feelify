@@ -46,10 +46,28 @@ const createStory = async (req, res) => {
   }
 };
 
-// Get all stories
+
+//  getAllStory function
 const getAllStory = async (req, res) => {
   try {
-    const stories = await Story.find()
+    const userId = req.user._id; // Assuming req.user is available through authentication middleware
+
+    // Fetch the current user to get the list of followed users
+    const currentUser = await User.findById(userId).select('following');
+    if (!currentUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get the list of followed user IDs
+    const followedUserIds = currentUser.following;
+
+    // If the current user is not following anyone, return an empty array
+    if (followedUserIds.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    // Fetch stories from the followed users
+    const stories = await Story.find({ user: { $in: followedUserIds } })
       .populate('user', 'username profilePic')
       .sort({ createdAt: -1 });
 
@@ -59,5 +77,6 @@ const getAllStory = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 export { createStory, getAllStory };

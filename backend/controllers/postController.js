@@ -268,4 +268,6 @@ const searchPosts = async (req, res) => {
     }
 };
 
-export { createPost, getPost, deletePost, likeUnlikePost, replyToPost, getFeedPosts, getUserPosts, searchPosts };
+
+
+export {createPost, getPost, deletePost, likeUnlikePost, replyToPost, getFeedPosts, getUserPosts, searchPosts };

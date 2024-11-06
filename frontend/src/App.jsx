@@ -14,6 +14,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import UserSearch from "./pages/UserSearch"; // Import UserSearch
 import Notifications from "./pages/NotificationPage";
 import StoryModalPage from "./pages/StoryModalPage";
+import FollowersFollowingPage from "./pages/FollowersFollowingPage";
 
 function App() {
     const user = useRecoilValue(userAtom);
@@ -31,10 +32,11 @@ function App() {
                     <Route path='/:username' element={<UserPage />} />
                     <Route path='/:username/post/:pid' element={<PostPage />} />
                     <Route path='/chat' element={user ? <ChatPage /> : <Navigate to={"/auth"} />} />
+                    <Route path='/:username/followerlist' element={user ? <FollowersFollowingPage /> : <Navigate to={"/auth"} />} />
                     <Route path='/settings' element={user ? <SettingsPage /> : <Navigate to={"/auth"} />} />
 
-                    <Route path='/notification' element={user ? <Notifications /> : <Navigate to={"/auth"} />} />
-                    <Route path="/story-viewer" element={<StoryModalPage />} />
+                    <Route path='/notifications' element={user ? <Notifications /> : <Navigate to={"/auth"} />} />
+                    <Route path="/story-viewer" element={user ? <StoryModalPage /> : <Navigate to={"/auth"} />} />
                 </Routes>
             </Container>
         </Box>

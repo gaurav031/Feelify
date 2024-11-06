@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link as RouterLink } from "react-router-dom";
-import { Button, Flex, Box, Link, useColorMode, Text, Badge } from "@chakra-ui/react";
+import { Button, Flex, Box, Link, useColorMode, Text, useToast } from "@chakra-ui/react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import authScreenAtom from "../atoms/authAtom";
-import { AiFillHome, AiFillNotification } from "react-icons/ai";
+import { AiFillHome } from "react-icons/ai";
 import { RxAvatar } from "react-icons/rx";
 import { FiLogOut } from "react-icons/fi";
 import { BsFillChatQuoteFill } from "react-icons/bs";
-import { MdNotifications, MdNotificationsActive, MdOutlineSettings } from "react-icons/md";
+import { MdOutlineSettings } from "react-icons/md";
 import { AddIcon, SearchIcon } from "@chakra-ui/icons";
 import { useDisclosure } from "@chakra-ui/react";
 import axios from "axios";
 import useLogout from "../hooks/useLogout";
 import CreatePost from "./CreatePost";
 import { FaRegHeart } from "react-icons/fa6";
+import { useDispatch, useSelector } from 'react-redux';
+import { setNotifications } from '../redux/notificationsSlice';
 
 const Header = () => {
 	const navigate = useNavigate();
@@ -25,22 +27,26 @@ const Header = () => {
 	const setAuthScreen = useSetRecoilState(authScreenAtom);
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const [searchTerm, setSearchTerm] = useState("");
-	const [unreadCount, setUnreadCount] = useState(0);
+	
+	const dispatch = useDispatch();
+	const { unreadCount } = useSelector((state) => state.notifications);
+	
+	
+	const toast = useToast();
 
 	// Fetch notifications to get the count of unread notifications
 	useEffect(() => {
 		const fetchUnreadNotifications = async () => {
 			try {
 				const response = await axios.get('/api/notifications');
-				const unread = response.data.filter(notification => !notification.isRead).length;
-				setUnreadCount(unread);
+				dispatch(setNotifications(response.data));
 			} catch (error) {
-				console.error("Error fetching notifications:", error);
+				console.error('Error fetching notifications:', error);
 			}
 		};
 
 		fetchUnreadNotifications();
-	}, []);
+	}, [dispatch]);
 
 	const handleSearchRedirect = () => {
 		navigate(`/search`);
@@ -85,18 +91,8 @@ const Header = () => {
 						</Button>
 
 						{/* Notifications Icon with Unread Badge */}
-						{/* Notifications Icon with Unread Badge */}
-						<Link
-							as={RouterLink}
-							to={`/notification`}
-							position="relative"
-							
-							_hover={{ color: colorMode === "dark" ? "gray.300" : "gray.600" }}
-						>
-							<FaRegHeart
-								size={24}
-								color={colorMode === "dark" ? "white" : "black"}
-							/>
+						<Link as={RouterLink} to="/notifications" position="relative">
+							<FaRegHeart size={24} color={colorMode === 'dark' ? 'white' : 'black'} />
 							{unreadCount > 0 && (
 								<Text
 									position="absolute"

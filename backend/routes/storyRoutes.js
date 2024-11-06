@@ -13,4 +13,5 @@ const router = express.Router();
 router.post('/create', protectRoute, upload.single('media'), createStory);
 router.get('/getall', protectRoute, getAllStory);
 router.get("/search", searchUser);
+
 export default router;

@@ -168,7 +168,7 @@ const StoryPage = ({ currentUserId }) => {
                         top="14%"  // Adjust position as needed
                     />
                     <Text fontSize="sm" textAlign="center" fontWeight="bold" mt={5} ml={5}>
-                        Share Feeling 🥰
+                        Share Feeling 
                     </Text>
                 </Box>
 
