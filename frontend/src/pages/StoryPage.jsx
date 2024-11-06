@@ -16,31 +16,30 @@ import {
     Flex,
     Spinner,
     useToast,
-    useColorMode,
+    Image,
 } from '@chakra-ui/react';
-import { AddIcon, ChevronRightIcon, ChevronLeftIcon } from '@chakra-ui/icons';
+import { AddIcon } from '@chakra-ui/icons';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useColorMode } from '@chakra-ui/react';
 
-const StoryPage = () => {
-    const [stories, setStories] = useState([]);
+const StoryPage = ({ currentUserId }) => {
+    const navigate = useNavigate();
     const [groupedStories, setGroupedStories] = useState([]);
-    const [currentUserStories, setCurrentUserStories] = useState([]);
-    const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
-    const [currentUserIndex, setCurrentUserIndex] = useState(0);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [file, setFile] = useState(null);
-    const [mediaType, setMediaType] = useState('image');
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [mediaType, setMediaType] = useState('image'); // Default to image
+    const [filePreview, setFilePreview] = useState(null); // Preview URL for the selected file
     const { isOpen: isUploadOpen, onOpen: onUploadOpen, onClose: onUploadClose } = useDisclosure();
     const toast = useToast();
-    const [comment, setComment] = useState('');
     const { colorMode } = useColorMode();
-    const isDark = colorMode === 'dark';
+
     useEffect(() => {
         fetchStories();
     }, []);
 
+    // Fetch stories from the server
     const fetchStories = async () => {
         setLoading(true);
         try {
@@ -59,7 +58,17 @@ const StoryPage = () => {
                 acc[userId].stories.push(story);
                 return acc;
             }, {});
-            setGroupedStories(Object.values(grouped));
+
+            // Convert object to array and move the current user's story to the beginning
+            const storiesArray = Object.values(grouped);
+            const currentUserStoryIndex = storiesArray.findIndex(group => group.user._id === currentUserId);
+
+            if (currentUserStoryIndex > -1) {
+                const [currentUserStory] = storiesArray.splice(currentUserStoryIndex, 1);
+                storiesArray.unshift(currentUserStory); // Add current user's story at the beginning
+            }
+
+            setGroupedStories(storiesArray);
         } catch (error) {
             console.error("Error fetching stories:", error);
         } finally {
@@ -67,20 +76,43 @@ const StoryPage = () => {
         }
     };
 
-    const handleStoryClick = (userStories, userIndex) => {
-        setCurrentUserStories(userStories.stories);
-        setCurrentStoryIndex(0);
-        setCurrentUserIndex(userIndex);
-        onOpen();
+    // Handle story card click to navigate to the story viewer
+    const handleStoryClick = (userStories) => {
+        navigate('/story-viewer', {
+            state: {
+                userStories: userStories.stories,
+                initialStoryIndex: 0,
+            },
+        });
     };
 
+    // Handle file change for upload
     const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
+        const selectedFile = e.target.files[0];
+        setFile(selectedFile);
+
+        // Generate file preview
+        const filePreviewUrl = URL.createObjectURL(selectedFile);
+        setFilePreview(filePreviewUrl);
+
+        // Set media type based on file type (image or video)
+        if (selectedFile.type.startsWith('image/')) {
+            setMediaType('image');
+        } else if (selectedFile.type.startsWith('video/')) {
+            setMediaType('video');
+        }
     };
 
+    // Handle the upload of the selected file
     const handleUpload = async () => {
         if (!file) {
-            alert("Please select a file to upload");
+            toast({
+                title: "No file selected",
+                description: "Please select a file to upload",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+            });
             return;
         }
 
@@ -106,7 +138,7 @@ const StoryPage = () => {
         } catch (error) {
             console.error('Error creating story:', error);
             toast({
-                title: 'Failed to upload story.',
+                title: 'Failed to upload story',
                 description: 'Please try again later.',
                 status: 'error',
                 duration: 3000,
@@ -115,66 +147,29 @@ const StoryPage = () => {
         } finally {
             setUploading(false);
             setFile(null);
-        }
-    };
-
-    const handleNextStory = () => {
-        if (currentStoryIndex < currentUserStories.length - 1) {
-            setCurrentStoryIndex(currentStoryIndex + 1);
-        } else if (currentUserIndex < groupedStories.length - 1) {
-            const nextUserIndex = currentUserIndex + 1;
-            setCurrentUserStories(groupedStories[nextUserIndex].stories);
-            setCurrentUserIndex(nextUserIndex);
-            setCurrentStoryIndex(0);
-        }
-    };
-
-    const handlePrevStory = () => {
-        if (currentStoryIndex > 0) {
-            setCurrentStoryIndex(currentStoryIndex - 1);
-        } else if (currentUserIndex > 0) {
-            const prevUserIndex = currentUserIndex - 1;
-            setCurrentUserStories(groupedStories[prevUserIndex].stories);
-            setCurrentUserIndex(prevUserIndex);
-            setCurrentStoryIndex(groupedStories[prevUserIndex].stories.length - 1);
+            setFilePreview(null); // Clear the preview after upload
         }
     };
 
     return (
-        <Box overflowX="auto" whiteSpace="nowrap" p={2} >
-            <Flex display="inline-flex" gap={3} >
+        <Box overflowX="auto" whiteSpace="nowrap" p={2}>
+            <Flex display="inline-flex" ml={-3}>
                 {/* Create Story Card */}
-                <Box
-                    border={`${isDark ? 'white' : 'black'} solid 1px`} // Border color based on theme
-                    borderRadius="full"
-                    position="relative"
-                    w="100px"
-                    h="100px"
-                    bg={'linear-gradient(to right, rgba(255, 0, 0, 0.5), rgba(0, 0, 255, 0.5))' } // Background color based on theme
-                    boxShadow="md"
-                    cursor="pointer"
-                    onClick={onUploadOpen}
-                    display="flex"
-                    flexDirection="column"
-                    alignItems="center"
-                    justifyContent="center"
-                >
-                    {/* Icon centered */}
+                <Box display="flex" flexDirection="column" alignItems="center">
                     <IconButton
                         icon={<AddIcon />}
+                        onClick={onUploadOpen}
                         aria-label="Add Story"
-                        bg="blue.500"
-                        color="white"
+                        color={colorMode === 'dark' ? 'white' : 'black'}
+                        border="3px solid red"
                         borderRadius="full"
-                        size="lg" // Adjust size as needed
-                        position="absolute"
-                        top="50%"
-                        left="50%"
-                        transform="translate(-50%, -50%)"
-                        zIndex={1} // Ensure icon is above the background
+                        size="lg"
+                        position="relative"
+                        top="14%"  // Adjust position as needed
                     />
-                    {/* Text below icon */}
-
+                    <Text fontSize="sm" textAlign="center" fontWeight="bold" mt={5} ml={5}>
+                        Share Feeling 🥰
+                    </Text>
                 </Box>
 
                 {/* User Story Cards */}
@@ -182,39 +177,34 @@ const StoryPage = () => {
                     <Spinner />
                 ) : (
                     groupedStories.map((userStories, index) => (
-                        <Box
-                            key={userStories.user._id} // Ensure unique key
-                            borderRadius="full"
-                            position="relative"
-                            w="100px"
+                        <Flex
+                            direction="column"
+                            justify="center"
+                            align="center"
                             h="100px"
-                            boxShadow="md"
-                            cursor="pointer"
-                            alignItems="center"
-                            justifyContent="center"
-                            backgroundImage={
-                                userStories.stories[0]?.mediaType === 'video' 
-                                    ? 'linear-gradient(to right, rgba(255, 0, 0, 0.5), rgba(0, 0, 255, 0.5))'  // Gradient for video
-                                    : `url(${userStories.stories[0]?.mediaUrl})` // Image for photo
-                            }                            backgroundSize="cover"
-                            
-                            backgroundPosition="center"
-                            onClick={() => handleStoryClick(userStories, index)}
+                            w="100px"
+                            borderRadius="full"
+                            key={index}
+                            p={2}
+                            onClick={() => handleStoryClick(userStories)}
                         >
-                            <Flex direction="column" justify="flex-end" align="center" h="100%" p={2}  borderRadius="full">
-                                <Avatar src={userStories.user.profilePic} border="3px solid blue" size="md" mb={2} />
-                                <Text  fontSize="sm" textAlign="center" color={isDark ? 'white' : 'black'} fontWeight="bold">
-                                    {userStories.user.username}
-                                </Text>
-                            </Flex>
-                        </Box>
+                            <Avatar
+                                src={userStories.user.profilePic}
+                                border="3px solid blue"
+                                size="md"
+                                mb={2}
+                            />
+                            <Text fontSize="sm" textAlign="center" fontWeight="bold">
+                                {userStories.user.username}
+                            </Text>
+                        </Flex>
                     ))
                 )}
 
                 {/* Upload Story Modal */}
-                <Modal isOpen={isUploadOpen} onClose={onUploadClose} size="md" isCentered>
+                <Modal isOpen={isUploadOpen} onClose={onUploadClose} size="md" isCentered >
                     <ModalOverlay />
-                    <ModalContent>
+                    <ModalContent  background={colorMode === 'dark' ? "blackAlpha.900" : 'white'}> 
                         <ModalCloseButton />
                         <ModalBody>
                             <Text mb={4}>Upload a Story</Text>
@@ -224,69 +214,40 @@ const StoryPage = () => {
                                 accept="image/*,video/*"
                                 mb={3}
                             />
-                            <Flex>
-                                <Button onClick={() => setMediaType('image')} colorScheme={mediaType === 'image' ? 'blue' : 'gray'}>
+                            {/* Show Preview of the Selected File */}
+                            {filePreview && (
+                                <Box mt={3} textAlign="center">
+                                    {mediaType === 'image' ? (
+                                        <Image src={filePreview} alt="Preview" maxW="100%" />
+                                    ) : mediaType === 'video' ? (
+                                        <video width="100%" controls>
+                                            <source src={filePreview} type={file.type} />
+                                        </video>
+                                    ) : null}
+                                </Box>
+                            )}
+                            {/* Select Media Type (Image or Video) */}
+                            <Flex mt={3}>
+                                <Button
+                                    onClick={() => setMediaType('image')}
+                                    colorScheme={mediaType === 'image' ? 'blue' : 'gray'}
+                                >
                                     Image
                                 </Button>
-                                <Button onClick={() => setMediaType('video')} colorScheme={mediaType === 'video' ? 'blue' : 'gray'} ml={2}>
+                                <Button
+                                    onClick={() => setMediaType('video')}
+                                    colorScheme={mediaType === 'video' ? 'blue' : 'gray'}
+                                    ml={2}
+                                >
                                     Video
                                 </Button>
                             </Flex>
                         </ModalBody>
                         <ModalFooter>
-                            <Button colorScheme="blue" onClick={handleUpload} isLoading={uploading}>Upload</Button>
+                            <Button colorScheme="blue" onClick={handleUpload} isLoading={uploading}>
+                                Upload
+                            </Button>
                         </ModalFooter>
-                    </ModalContent>
-                </Modal>
-
-                {/* Story Modal */}
-                <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered >
-                    <ModalOverlay />
-                    <ModalContent background="transparent" boxShadow="none">
-                        <ModalCloseButton />
-                        <ModalBody position="relative" padding={0}>
-                            {currentUserStories.length > 0 ? (
-                                <Flex direction="column" align="center">
-                                    <Box position="relative" width="auto" height="auto">
-                                        {currentUserStories[currentStoryIndex].mediaType === 'video' ? (
-                                            <video src={currentUserStories[currentStoryIndex].mediaUrl} controls style={{ width: '100%', height: 'auto' }} />
-                                        ) : (
-                                            <img src={currentUserStories[currentStoryIndex].mediaUrl} alt="Story" style={{ width: '100%', height: 'auto' }} />
-                                        )}
-                                        <Flex position="absolute" top={2} left={2} align="center" background="transparent">
-                                            <Avatar src={currentUserStories[currentStoryIndex].user.profilePic} size="md" />
-                                            <Text color="white" fontWeight="bold" ml={2}>
-                                                {currentUserStories[currentStoryIndex].user.username}
-                                            </Text>
-                                        </Flex>
-                                        <IconButton
-                                            icon={<ChevronLeftIcon />}
-                                            aria-label="Previous Story"
-                                            onClick={handlePrevStory}
-                                            position="absolute"
-                                            left={0}
-                                            top="50%"
-                                            background="red"
-                                            transform="translateY(-50%)"
-                                            colorScheme="blackAlpha"
-                                        />
-                                        <IconButton
-                                            icon={<ChevronRightIcon />}
-                                            aria-label="Next Story"
-                                            onClick={handleNextStory}
-                                            position="absolute"
-                                            right={0}
-                                            top="50%"
-                                            background="red"
-                                            transform="translateY(-50%)"
-                                            colorScheme="blackAlpha"
-                                        />
-                                    </Box>
-                                </Flex>
-                            ) : (
-                                <Spinner />
-                            )}
-                        </ModalBody>
                     </ModalContent>
                 </Modal>
             </Flex>

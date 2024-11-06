@@ -12,8 +12,8 @@ import CreatePost from "./components/CreatePost";
 import ChatPage from "./pages/ChatPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import UserSearch from "./pages/UserSearch"; // Import UserSearch
-import NotificationPage from "./pages/NotificationPage";
 import Notifications from "./pages/NotificationPage";
+import StoryModalPage from "./pages/StoryModalPage";
 
 function App() {
     const user = useRecoilValue(userAtom);
@@ -34,6 +34,7 @@ function App() {
                     <Route path='/settings' element={user ? <SettingsPage /> : <Navigate to={"/auth"} />} />
 
                     <Route path='/notification' element={user ? <Notifications /> : <Navigate to={"/auth"} />} />
+                    <Route path="/story-viewer" element={<StoryModalPage />} />
                 </Routes>
             </Container>
         </Box>

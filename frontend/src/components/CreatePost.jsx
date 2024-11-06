@@ -26,6 +26,7 @@ import userAtom from "../atoms/userAtom";
 import useShowToast from "../hooks/useShowToast";
 import postsAtom from "../atoms/postsAtom";
 import { useParams } from "react-router-dom";
+import { useColorMode } from '@chakra-ui/react';
 
 const MAX_CHAR = 500;
 
@@ -42,7 +43,7 @@ const CreatePost = ({ isOpen, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [posts, setPosts] = useRecoilState(postsAtom);
     const { username } = useParams();
-
+    const { colorMode } = useColorMode();
     // Reset state when modal is closed
     const resetState = () => {
         setPostText("");
@@ -116,7 +117,7 @@ const CreatePost = ({ isOpen, onClose }) => {
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
-            <ModalContent mx={4} my={6} maxW="lg" borderRadius="md" boxShadow="lg">
+            <ModalContent mx={4} my={6} maxW="lg" borderRadius="md" boxShadow="lg"  background={colorMode === 'dark' ? "blackAlpha.900" : 'white'}>
                 <ModalHeader textAlign="center" fontWeight="bold" fontSize="lg">Create Post</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody pb={6} display="flex" flexDirection="column" alignItems="center">
