@@ -110,7 +110,7 @@ const StoryModalPage = () => {
     const formattedDate = new Date(story.createdAt).toLocaleString();
 
     return (
-        <Box position="relative" background="black" minHeight="100vh" color="white" display="flex alignItems=" justifyContent="center">
+        <Box position="relative" background="black" minHeight="100vh" color="white" display="flex" justifyContent="center">
             {userStories.length > 0 ? (
                 <Flex direction="column" align="center" width="100%" maxWidth="600px" >
                     <Progress
@@ -148,14 +148,21 @@ const StoryModalPage = () => {
                         </Box>
                     </Flex>
 
-                    <Box position="relative" width="100%" height="auto" mt={20}>
+                    <Box position="relative" 
+                        width="100%"  
+                        maxWidth="90%" 
+                        height="auto"
+                         mt={20}   
+                         aspectRatio="9 / 16" 
+                        justifyContent="center"
+                         alignItems="center"
+                    >
                         {story.mediaType === 'video' ? (
                             <video
                                 src={story.mediaUrl}
                                 autoPlay
-                                controls
                                 onEnded={handleNextStory}
-                                style={{ width: '100%', height: 'auto', borderRadius: '10px' }}
+                                style={{ width: '100%', height: 'auto', borderRadius: '10px', controls: false }}
                             />
                         ) : (
                             <img
@@ -229,13 +236,12 @@ const StoryModalPage = () => {
             <Modal isOpen={viewersModalOpen} onClose={() => setViewersModalOpen(false)} >
                 <ModalOverlay />
                 <ModalContent
-                    background={colorMode==="dark" ? "black":"white"}
-                    // ml={{ base: "0", md: "20%" }}  // Position the modal towards the left
+                    background={colorMode === "dark" ? "black" : "white"}
                     p={4}
                     borderRadius="md"
                     shadow="lg"
                 >
-                    <ModalHeader color={colorMode==="dark" ? "white":"black"}>Story Viewers ({viewers.length})</ModalHeader>
+                    <ModalHeader color={colorMode === "dark" ? "white" : "black"}>Story Viewers ({viewers.length})</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
                         {viewers.length > 0 ? (
@@ -248,42 +254,18 @@ const StoryModalPage = () => {
                                     borderRadius="md"
                                     borderWidth="1px"
                                     boxShadow="md"
-                                    _hover={{ bg: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%);" }}
-                                    transition="background 0.3s ease"
+                                    _hover={{ bg: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)" }}
                                 >
-                                    <Link to={`/${viewer.username}`}>
-                                        <Avatar src={viewer.profilePic} size="md" />
-                                    </Link>
-                                    <Box ml={3}>
-                                        <Text
-                                            fontWeight="bold"
-                                            color={colorMode==="dark" ? "white":"black"}
-                                            fontSize="lg"
-                                        >
-                                            {viewer.name}
-                                        </Text>
-                                        <Text fontSize="sm" color={colorMode==="dark" ? "whiteAlpha.900":"blackAlpha.900"}>
-                                            @{viewer.username}
-                                        </Text>
-                                    </Box>
+                                    <Avatar src={viewer.profilePic} size="md" />
+                                    <Text ml={3} fontWeight="bold">{viewer.username}</Text>
                                 </Flex>
                             ))
                         ) : (
-                            <Text
-                                color={modalBgColor === "black" ? "white" : "black"}
-                                fontSize="lg"
-                                textAlign="center"
-                                fontWeight="semibold"
-                                mt={4}
-                            >
-                                No viewers yet.
-                            </Text>
+                            <Text>No viewers yet!</Text>
                         )}
                     </ModalBody>
-
                 </ModalContent>
             </Modal>
-
         </Box>
     );
 };

@@ -15,6 +15,7 @@ import UserSearch from "./pages/UserSearch"; // Import UserSearch
 import Notifications from "./pages/NotificationPage";
 import StoryModalPage from "./pages/StoryModalPage";
 import FollowersFollowingPage from "./pages/FollowersFollowingPage";
+import VideoFeedPage from "./pages/VideoFeedPage";
 
 function App() {
     const user = useRecoilValue(userAtom);
@@ -37,6 +38,8 @@ function App() {
 
                     <Route path='/notifications' element={user ? <Notifications /> : <Navigate to={"/auth"} />} />
                     <Route path="/story-viewer" element={user ? <StoryModalPage /> : <Navigate to={"/auth"} />} />
+                    <Route path="/video" element={user ? <VideoFeedPage /> : <Navigate to={"/auth"} />} />
+
                 </Routes>
             </Container>
         </Box>

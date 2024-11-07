@@ -5,16 +5,14 @@ import { useRecoilValue, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import authScreenAtom from "../atoms/authAtom";
 import { AiFillHome } from "react-icons/ai";
-import { RxAvatar } from "react-icons/rx";
 import { FiLogOut } from "react-icons/fi";
 import { BsFillChatQuoteFill } from "react-icons/bs";
-import { MdOutlineSettings } from "react-icons/md";
-import { AddIcon, SearchIcon } from "@chakra-ui/icons";
+import { MdOutlineSettings, MdVideoLibrary } from "react-icons/md";
+import { AddIcon, SearchIcon, ViewIcon } from "@chakra-ui/icons";
 import { useDisclosure } from "@chakra-ui/react";
 import axios from "axios";
-import useLogout from "../hooks/useLogout";
 import CreatePost from "./CreatePost";
-import { FaRegHeart } from "react-icons/fa6";
+import { FaRegHeart, FaVideoSlash } from "react-icons/fa6";
 import { useDispatch, useSelector } from 'react-redux';
 import { setNotifications } from '../redux/notificationsSlice';
 
@@ -23,7 +21,6 @@ const Header = () => {
 	const location = useLocation();
 	const { colorMode, toggleColorMode } = useColorMode();
 	const user = useRecoilValue(userAtom);
-	const logout = useLogout();
 	const setAuthScreen = useSetRecoilState(authScreenAtom);
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const [searchTerm, setSearchTerm] = useState("");
@@ -90,7 +87,10 @@ const Header = () => {
 						>
 							<AddIcon />
 						</Button>
+						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/video`}>
+							<MdVideoLibrary  size={24} />
 
+						</Link>
 						{/* Notifications Icon with Unread Badge */}
 						<Link as={RouterLink} to="/notifications" position="relative">
 							<FaRegHeart size={24} color={colorMode === 'dark' ? 'white' : 'black'} />
@@ -115,17 +115,16 @@ const Header = () => {
 							)}
 						</Link>
 						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/${user.username}`}>
-							<Avatar size="sm" src={user?.profilePic} />		
+							<Avatar size="sm" src={user?.profilePic} />
 						</Link>
+
 						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/chat`}>
 							<BsFillChatQuoteFill size={20} />
 						</Link>
 						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/settings`}>
 							<MdOutlineSettings size={20} />
 						</Link>
-						<Button size="xs" onClick={logout} aria-label="Logout">
-							<FiLogOut size={20} />
-						</Button>
+						
 					</Flex>
 				) : (
 					<Flex gap={4}>
@@ -164,11 +163,12 @@ const Header = () => {
 					<Button onClick={onOpen} aria-label="Add">
 						<AddIcon boxSize={6} />
 					</Button>
-					<Link as={RouterLink} to="/settings" aria-label="Settings">
-						<MdOutlineSettings size={24} />
+
+					<Link as={RouterLink} to="/video" aria-label="video">
+						<MdVideoLibrary size={24} />
 					</Link>
 					<Link as={RouterLink} to={`/${user.username}`} aria-label="Profile">
-					<Avatar size="sm" src={user?.profilePic} />		
+						<Avatar size="sm" src={user?.profilePic} />
 					</Link>
 				</Box>
 			)}

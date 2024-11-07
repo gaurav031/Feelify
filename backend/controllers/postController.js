@@ -8,9 +8,9 @@ const createPost = async (req, res) => {
         const { postedBy, text } = req.body; // Do not destructure img and video from req.body
         let img, video; // Initialize variables
 
-        if (!postedBy || !text) {
-            return res.status(400).json({ error: "Postedby and text fields are required" });
-        }
+        // if (!postedBy || !text) {
+        //     return res.status(400).json({ error: "Postedby and text fields are required" });
+        // }
 
         const user = await User.findById(postedBy);
         if (!user) {
@@ -219,19 +219,35 @@ const getFeedPosts = async (req, res) => {
         const userId = req.user._id;
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ error: "User not found" });
+            return res.status(404).json({ error: "User  not found" });
         }
 
         const following = user.following;
 
-        const feedPosts = await Post.find({ postedBy: { $in: following } }).sort({ createdAt: -1 });
+        // Get all video posts (whether or not the user is following the creator)
+        const videoPosts = await Post.find({
+            video: { $exists: true }, 
+        })
+        .populate('postedBy', 'profilePic username') // Populate user data
+        .sort({ createdAt: -1 });
 
-        res.status(200).json(feedPosts);
+        // Get image and text posts from the users the current user is following
+        const feedPosts = await Post.find({
+            postedBy: { $in: following },  // Only posts from followed users
+            video: { $exists: false }       // Ensure it's not a video post
+        })
+        .populate('postedBy', 'profilePic username') // Populate user data
+        .sort({ createdAt: -1 });
+
+        // Combine the video posts and the followed posts
+        const allPosts = [...videoPosts, ...feedPosts];
+
+        res.status(200).json(allPosts);
     } catch (err) {
-        // Change: Removed specific error message
         res.status(500).json({ error: "An error occurred" });
     }
 };
+
 
 const getUserPosts = async (req, res) => {
     const { username } = req.params;
@@ -270,4 +286,4 @@ const searchPosts = async (req, res) => {
 
 
 
-export {createPost, getPost, deletePost, likeUnlikePost, replyToPost, getFeedPosts, getUserPosts, searchPosts };
+export { createPost, getPost, deletePost, likeUnlikePost, replyToPost, getFeedPosts, getUserPosts, searchPosts };

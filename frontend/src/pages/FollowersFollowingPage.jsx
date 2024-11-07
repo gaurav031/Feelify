@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Heading, Spinner, Text, Avatar, Flex, Tabs, TabList, TabPanels, Tab, TabPanel,useColorMode  } from '@chakra-ui/react';
+import { Box, Text, Avatar, Flex, Tabs, TabList, TabPanels, Tab, TabPanel, useColorMode, IconButton, Spinner } from '@chakra-ui/react';
 import axios from 'axios';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ArrowBackIcon } from '@chakra-ui/icons';
 
 const FollowersFollowingPage = () => {
     const { username } = useParams(); // Get username from URL
@@ -10,12 +11,16 @@ const FollowersFollowingPage = () => {
     const [following, setFollowing] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-	const { colorMode } = useColorMode();
+    const [userInfo, setUserInfo] = useState(null); // State for user profile info
+    const { colorMode } = useColorMode();
+    const navigate = useNavigate();
+
     useEffect(() => {
         const fetchUserId = async () => {
             try {
                 const userResponse = await axios.get(`/api/users/profile/${username}`);
                 setUserId(userResponse.data._id);
+                setUserInfo(userResponse.data); // Save user profile info
             } catch (error) {
                 console.error('Error fetching user ID:', error);
                 setError('Could not retrieve user information.');
@@ -36,8 +41,6 @@ const FollowersFollowingPage = () => {
                     axios.get(`/api/users/${userId}/following`),
                 ]);
 
-               
-                
                 setFollowers(followersResponse.data);
                 setFollowing(followingResponse.data);
                 setLoading(false);
@@ -64,32 +67,56 @@ const FollowersFollowingPage = () => {
     }
 
     return (
-        <Box p={8}>
+        <Box p={8} position="relative" mt={-10}>
+            {/* Back Arrow Button */}
+            <IconButton
+                icon={<ArrowBackIcon />}
+                aria-label="Back"
+                onClick={() => navigate(-1)} // Navigate to the previous page
+                position="absolute"
+                top={54}
+                left={4}
+                color={colorMode === "dark" ? "white.900" : "black"}
+                background="transparent"
+                
+                size="md"
+                
+                zIndex={1}
+            />
+
+            {/* User Profile Pic and Username */}
+            {userInfo && (
+                <Flex align="center" mt={27} mb={6} ml={7} >
+                   
+                    <Text fontSize="lg" fontWeight="bold" >
+                        @{userInfo.username}
+                    </Text>
+                </Flex>
+            )}
+
             <Tabs variant="soft-rounded" colorScheme="blue">
-            <TabList gap={20}>
-			<Tab
-				// When active, apply red background and white text
-				bg="transparent"
-				_selected={{
-					bg: "red.500", // Red when selected
-					color:  colorMode === "dark" ? "white" : "black", // White text color when selected
-				}}
-				color={colorMode === "dark" ? "white.900" : "black"} 
-			>
-				Followers
-			</Tab>
-			<Tab
-				// When active, apply red background and white text
-				bg="transparent"
-				_selected={{
-					bg: "red.500", // Red when selected
-					color:  colorMode === "dark" ? "white" : "black", 
-				}}
-				color={colorMode === "dark" ? "white.900" : "black"} 
-			>
-				Following
-			</Tab>
-		</TabList>
+                <TabList gap={20}>
+                    <Tab
+                        bg="transparent"
+                        _selected={{
+                            bg: "red.500",
+                            color: colorMode === "dark" ? "white" : "black",
+                        }}
+                        color={colorMode === "dark" ? "white.900" : "black"}
+                    >
+                        Followers
+                    </Tab>
+                    <Tab
+                        bg="transparent"
+                        _selected={{
+                            bg: "red.500",
+                            color: colorMode === "dark" ? "white" : "black",
+                        }}
+                        color={colorMode === "dark" ? "white.900" : "black"}
+                    >
+                        Following
+                    </Tab>
+                </TabList>
 
                 <TabPanels>
                     {/* Followers Tab Panel */}
@@ -98,7 +125,18 @@ const FollowersFollowingPage = () => {
                             <Text>No followers found.</Text>
                         ) : (
                             followers.map((follower) => (
-                                <Flex key={follower._id} align="center" mb={4} p={4} borderRadius="md" boxShadow="sm" borderWidth="1px">
+                                <Flex
+                                    key={follower._id}
+                                    align="center"
+                                    mb={4}
+                                    p={4}
+                                    borderRadius="md"
+                                    boxShadow="sm"
+                                    borderWidth="1px"
+                                    _hover={{
+                                        background: colorMode === "dark" ? "gray.700" : "gray.100",
+                                    }}
+                                >
                                     <Link to={`/${follower.username}`}>
                                         <Avatar name={follower.username} src={follower.profilePic} mr={4} />
                                     </Link>
@@ -119,9 +157,19 @@ const FollowersFollowingPage = () => {
                             <Text>No following people found.</Text>
                         ) : (
                             following.map((followedUser) => (
-                                <Flex key={followedUser._id} align="center" mb={4} p={4} borderRadius="md" boxShadow="sm" borderWidth="1px">
-                                  <Link to={`/${followedUser.username}`}>
-
+                                <Flex
+                                    key={followedUser._id}
+                                    align="center"
+                                    mb={4}
+                                    p={4}
+                                    borderRadius="md"
+                                    boxShadow="sm"
+                                    borderWidth="1px"
+                                    _hover={{
+                                        background: colorMode === "dark" ? "gray.700" : "gray.100",
+                                    }}
+                                >
+                                    <Link to={`/${followedUser.username}`}>
                                         <Avatar name={followedUser.name} src={followedUser.profilePic} mr={4} />
                                     </Link>
                                     <Box>
