@@ -41,9 +41,11 @@ const CreatePost = ({ isOpen, onClose }) => {
     const user = useRecoilValue(userAtom);
     const showToast = useShowToast();
     const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);  // New success state
     const [posts, setPosts] = useRecoilState(postsAtom);
     const { username } = useParams();
     const { colorMode } = useColorMode();
+
     // Reset state when modal is closed
     const resetState = () => {
         setPostText("");
@@ -51,6 +53,8 @@ const CreatePost = ({ isOpen, onClose }) => {
         setVideoUrl("");
         setSelectedVideoFile(null);
         setRemainingChar(MAX_CHAR);
+        setLoading(false);  // Ensure loading is reset
+        setSuccess(false);  // Reset success message
     };
 
     useEffect(() => {
@@ -81,6 +85,7 @@ const CreatePost = ({ isOpen, onClose }) => {
 
     const handleCreatePost = async () => {
         setLoading(true);
+        setSuccess(false);  // Reset success message before uploading
         const formData = new FormData();
         formData.append('postedBy', user._id);
         formData.append('text', postText);
@@ -105,7 +110,8 @@ const CreatePost = ({ isOpen, onClose }) => {
             }
             showToast("Success", "Post created successfully", "success");
             setPosts((prevPosts) => [data, ...prevPosts]);
-            resetState(); // Reset state after successful post creation
+            setSuccess(true);  // Set success to true after posting
+            resetState();
             onClose();
         } catch (error) {
             showToast("Error", error.message, "error");
@@ -192,20 +198,16 @@ const CreatePost = ({ isOpen, onClose }) => {
                                 <Spinner size="lg" />
                                 <Text ml={2}>Uploading...</Text>
                             </Flex>
+                        ) : success ? (
+                            <Text fontSize="lg" fontWeight="bold" color="green.500" textAlign="center" mt={5}>
+                                Post created successfully!
+                            </Text>
                         ) : (
                             <Button colorScheme="blue" mr={3} mt={10} onClick={handleCreatePost} isFullWidth>
                                 Post
                             </Button>
                         )}
                     </FormControl>
-
-                    <ModalFooter justifyContent="center">
-                        {loading ? (
-                            <Text fontSize="lg" fontWeight="bold" color="green.500">
-                                Post created successfully!
-                            </Text>
-                        ) : null}
-                    </ModalFooter>
                 </ModalBody>
             </ModalContent>
         </Modal>

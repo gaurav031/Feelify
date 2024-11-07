@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box,
-    Avatar,
-    Text,
-    IconButton,
-    Flex,
-    Spinner,
-    Progress,
+    Box, Avatar, Text, IconButton, Flex, Spinner, Progress, Modal, ModalOverlay, ModalContent,
+    ModalHeader, ModalCloseButton, ModalBody,
+    useBreakpointValue,
+    useColorMode
 } from '@chakra-ui/react';
-import { ChevronRightIcon, ChevronLeftIcon, ArrowBackIcon } from '@chakra-ui/icons';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { ChevronRightIcon, ChevronLeftIcon, ArrowBackIcon, DeleteIcon, ViewIcon } from '@chakra-ui/icons';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useRecoilValue } from 'recoil';
+import userAtom from '../atoms/userAtom';
 
 const StoryModalPage = () => {
     const location = useLocation();
@@ -17,20 +16,38 @@ const StoryModalPage = () => {
     const { userStories, initialStoryIndex } = location.state || {};
     const [currentStoryIndex, setCurrentStoryIndex] = useState(initialStoryIndex || 0);
     const [progress, setProgress] = useState(0);
+    const [viewersModalOpen, setViewersModalOpen] = useState(false);
+    const [viewers, setViewers] = useState([]);
+    const [viewCount, setViewCount] = useState(0); // Define viewCount state
+    const [deleting, setDeleting] = useState(false);
+    const loggedInUser = useRecoilValue(userAtom); // Retrieve logged-in user info
+    const { colorMode } = useColorMode();
+
+    const modalBgColor = useBreakpointValue({
+        base: "white", // Default background for mobile
+        dark: "black", // Background color in dark mode
+        light: "white" // Background color in light mode
+    });
 
     useEffect(() => {
-        // Automatically advance to the next story or home if no next story
         if (userStories && userStories[currentStoryIndex]?.mediaType === 'image') {
             setProgress(0);
             const progressInterval = setInterval(() => {
                 setProgress((prev) => (prev < 100 ? prev + 1 : 100));
-            }, 50); // Increment progress every 50ms
+            }, 50);
 
-            const timer = setTimeout(handleNextStory, 5000); // Show image for 5 seconds
+            // Trigger view on loading the story
+            const triggerViewStory = async () => {
+                const story = userStories[currentStoryIndex];
+                await fetch(`/api/stories/${story._id}/view`, { method: 'POST' });
+            };
+            triggerViewStory();
+
+            const timer = setTimeout(handleNextStory, 5000);
 
             return () => {
-                clearTimeout(timer); // Clear timer on component unmount or when story changes
-                clearInterval(progressInterval); // Clear progress interval
+                clearTimeout(timer);
+                clearInterval(progressInterval);
             };
         }
     }, [currentStoryIndex, userStories]);
@@ -39,7 +56,7 @@ const StoryModalPage = () => {
         if (userStories && currentStoryIndex < userStories.length - 1) {
             setCurrentStoryIndex(currentStoryIndex + 1);
         } else {
-            navigate('/'); // Navigate to home when no more stories
+            navigate('/');
         }
     };
 
@@ -47,22 +64,55 @@ const StoryModalPage = () => {
         if (currentStoryIndex > 0) {
             setCurrentStoryIndex(currentStoryIndex - 1);
         } else {
-            navigate('/'); // Navigate to home if at the start
+            navigate('/');
+        }
+    };
+
+    const handleDeleteStory = async () => {
+        setDeleting(true);
+        try {
+            const story = userStories[currentStoryIndex];
+            await fetch(`/api/stories/${story._id}`, { method: 'DELETE' });
+            navigate('/');
+        } catch (error) {
+            console.error('Error deleting story:', error);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const handleViewersModal = async () => {
+        setViewersModalOpen(true); // Open modal immediately
+        try {
+            const story = userStories[currentStoryIndex];
+
+            // Trigger the view story API
+            await fetch(`/api/stories/${story._id}/view`, { method: 'POST' }); // Use POST for a view action
+
+            // Fetch viewers and view count after view is registered
+            const response = await fetch(`/api/stories/${story._id}/getviews`);
+            const data = await response.json();
+            console.log('Viewers data:', data); // Log the response
+
+            setViewers(data.viewers); // Set viewers after data is fetched
+            setViewCount(data.viewCount); // Set the viewCount state after data is fetched
+        } catch (error) {
+            console.error('Error fetching viewers:', error);
         }
     };
 
     if (!userStories) {
-        return <Spinner />; // Show a spinner while waiting for userStories
+        return <Spinner />;
     }
 
     const story = userStories[currentStoryIndex];
-    const formattedDate = new Date(story.createdAt).toLocaleString(); // Format timestamp
+    const isOwnStory = loggedInUser?._id === story.user._id;
+    const formattedDate = new Date(story.createdAt).toLocaleString();
 
     return (
-        <Box position="relative" background="black" minHeight="100vh" color="white" display="flex" alignItems="center" justifyContent="center">
+        <Box position="relative" background="black" minHeight="100vh" color="white" display="flex alignItems=" justifyContent="center">
             {userStories.length > 0 ? (
-                <Flex direction="column" align="center" width="100%" maxWidth="600px">
-                    {/* Loading Progress Line */}
+                <Flex direction="column" align="center" width="100%" maxWidth="600px" >
                     <Progress
                         value={story.mediaType === 'image' ? progress : 100}
                         size="xs"
@@ -73,7 +123,6 @@ const StoryModalPage = () => {
                         zIndex={10}
                     />
 
-                    {/* Back button to navigate to home */}
                     <IconButton
                         icon={<ArrowBackIcon />}
                         aria-label="Back to Home"
@@ -86,6 +135,7 @@ const StoryModalPage = () => {
                         background="transparent"
                         _hover={{ background: "transparent" }}
                     />
+
                     <Flex position="absolute" top={1} left={39} align="center" p={2} borderRadius="md" zIndex={10}>
                         <Avatar
                             src={story.user.profilePic}
@@ -94,10 +144,11 @@ const StoryModalPage = () => {
                         />
                         <Box ml={2}>
                             <Text fontWeight="bold">{story.user.username}</Text>
-                            <Text fontSize="sm" mt={1}>{formattedDate}</Text> {/* Display timestamp */}
+                            <Text fontSize="sm" mt={1}>{formattedDate}</Text>
                         </Box>
                     </Flex>
-                    <Box position="relative" width="100%" height="auto">
+
+                    <Box position="relative" width="100%" height="auto" mt={20}>
                         {story.mediaType === 'video' ? (
                             <video
                                 src={story.mediaUrl}
@@ -114,7 +165,6 @@ const StoryModalPage = () => {
                             />
                         )}
 
-                        {/* Navigation buttons */}
                         <IconButton
                             icon={<ChevronLeftIcon />}
                             aria-label="Previous Story"
@@ -140,10 +190,100 @@ const StoryModalPage = () => {
                             zIndex={5}
                         />
                     </Box>
+
+                    {isOwnStory && (
+                        <>
+                            <IconButton
+                                icon={<DeleteIcon />}
+                                aria-label="Delete Story"
+                                onClick={handleDeleteStory}
+                                position="absolute"
+                                top={4}
+                                right={2}
+                                color="red.500"
+                                background="transparent"
+                                _hover={{ background: "transparent" }}
+                                zIndex={10}
+                                isLoading={deleting}
+                            />
+                            <IconButton
+                                icon={<ViewIcon />}
+                                aria-label="View Story Viewers"
+                                onClick={handleViewersModal}
+                                position="absolute"
+                                top={4}
+                                right={14}
+                                color="white"
+                                background="transparent"
+                                _hover={{ background: "transparent" }}
+                                zIndex={10}
+                            />
+                        </>
+                    )}
                 </Flex>
             ) : (
                 <Spinner />
             )}
+
+            {/* Modal to show story viewers */}
+            <Modal isOpen={viewersModalOpen} onClose={() => setViewersModalOpen(false)} >
+                <ModalOverlay />
+                <ModalContent
+                    background={colorMode==="dark" ? "black":"white"}
+                    // ml={{ base: "0", md: "20%" }}  // Position the modal towards the left
+                    p={4}
+                    borderRadius="md"
+                    shadow="lg"
+                >
+                    <ModalHeader color={colorMode==="dark" ? "white":"black"}>Story Viewers ({viewers.length})</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        {viewers.length > 0 ? (
+                            viewers.map((viewer) => (
+                                <Flex
+                                    key={viewer._id}
+                                    align="center"
+                                    mb={4}
+                                    p={3}
+                                    borderRadius="md"
+                                    borderWidth="1px"
+                                    boxShadow="md"
+                                    _hover={{ bg: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%);" }}
+                                    transition="background 0.3s ease"
+                                >
+                                    <Link to={`/${viewer.username}`}>
+                                        <Avatar src={viewer.profilePic} size="md" />
+                                    </Link>
+                                    <Box ml={3}>
+                                        <Text
+                                            fontWeight="bold"
+                                            color={colorMode==="dark" ? "white":"black"}
+                                            fontSize="lg"
+                                        >
+                                            {viewer.name}
+                                        </Text>
+                                        <Text fontSize="sm" color={colorMode==="dark" ? "whiteAlpha.900":"blackAlpha.900"}>
+                                            @{viewer.username}
+                                        </Text>
+                                    </Box>
+                                </Flex>
+                            ))
+                        ) : (
+                            <Text
+                                color={modalBgColor === "black" ? "white" : "black"}
+                                fontSize="lg"
+                                textAlign="center"
+                                fontWeight="semibold"
+                                mt={4}
+                            >
+                                No viewers yet.
+                            </Text>
+                        )}
+                    </ModalBody>
+
+                </ModalContent>
+            </Modal>
+
         </Box>
     );
 };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link as RouterLink } from "react-router-dom";
-import { Button, Flex, Box, Link, useColorMode, Text, useToast } from "@chakra-ui/react";
+import { Button, Flex, Box, Link, useColorMode, Text, useToast, Avatar } from "@chakra-ui/react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import authScreenAtom from "../atoms/authAtom";
@@ -27,11 +27,11 @@ const Header = () => {
 	const setAuthScreen = useSetRecoilState(authScreenAtom);
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const [searchTerm, setSearchTerm] = useState("");
-	
+
 	const dispatch = useDispatch();
 	const { unreadCount } = useSelector((state) => state.notifications);
-	
-	
+
+
 	const toast = useToast();
 
 	// Fetch notifications to get the count of unread notifications
@@ -53,8 +53,9 @@ const Header = () => {
 	};
 
 	const isChatPageOnMobile = location.pathname === "/chat" && window.innerWidth <= 768;
-
+	const isStoryOnMobile = location.pathname === "/story-viewer" && window.innerWidth <= 768;
 	if (isChatPageOnMobile) return null;
+	if (isStoryOnMobile) return null;
 
 	return (
 		<>
@@ -114,7 +115,7 @@ const Header = () => {
 							)}
 						</Link>
 						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/${user.username}`}>
-							<RxAvatar size={24} />
+							<Avatar size="sm" src={user?.profilePic} />		
 						</Link>
 						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/chat`}>
 							<BsFillChatQuoteFill size={20} />
@@ -167,7 +168,7 @@ const Header = () => {
 						<MdOutlineSettings size={24} />
 					</Link>
 					<Link as={RouterLink} to={`/${user.username}`} aria-label="Profile">
-						<RxAvatar size={24} />
+					<Avatar size="sm" src={user?.profilePic} />		
 					</Link>
 				</Box>
 			)}

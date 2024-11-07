@@ -10,7 +10,7 @@ const upload = multer({ storage }).single('media');
 // Create a story
 const createStory = async (req, res) => {
   try {
-    const userId= req.user._id;
+    const userId = req.user._id;
     const { mediaType } = req.body;
 
     if (!req.file) {
@@ -19,23 +19,24 @@ const createStory = async (req, res) => {
 
     // Upload media to Cloudinary from memory
     const uploadResult = await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          { resource_type: mediaType === 'video' ? 'video' : 'image' },
-          (error, result) => {
-            if (error) reject(new Error("Cloudinary upload failed"));
-            resolve(result);
-          }
-        );
-        uploadStream.end(req.file.buffer);
-      });
-      
-      const mediaUrl = uploadResult.secure_url;
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { resource_type: mediaType === 'video' ? 'video' : 'image' },
+        (error, result) => {
+          if (error) reject(new Error("Cloudinary upload failed"));
+          resolve(result);
+        }
+      );
+      uploadStream.end(req.file.buffer);
+    });
+
+    const mediaUrl = uploadResult.secure_url;
 
     // Create a new story
     const newStory = new Story({
       user: userId,
       mediaUrl,
       mediaType,
+      viewedBy: []  // Initially empty, will be populated when someone views the story
     });
 
     await newStory.save();
@@ -47,7 +48,7 @@ const createStory = async (req, res) => {
 };
 
 
-//  getAllStory function
+// getAllStory function
 const getAllStory = async (req, res) => {
   try {
     const userId = req.user._id; // Assuming req.user is available through authentication middleware
@@ -58,16 +59,12 @@ const getAllStory = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Get the list of followed user IDs
-    const followedUserIds = currentUser.following;
+    // Get the list of followed user IDs and add the current user ID to include their own stories
+    const followedUserIds = [...currentUser.following, userId];
 
-    // If the current user is not following anyone, return an empty array
-    if (followedUserIds.length === 0) {
-      return res.status(200).json([]);
-    }
-
-    // Fetch stories from the followed users
-    const stories = await Story.find({ user: { $in: followedUserIds } })
+    // Fetch stories from the followed users and the current user
+    const stories = await Story.find({ user: { $in: followedUserIds },
+      createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } })
       .populate('user', 'username profilePic')
       .sort({ createdAt: -1 });
 
@@ -79,4 +76,84 @@ const getAllStory = async (req, res) => {
 };
 
 
-export { createStory, getAllStory };
+const deleteStory = async (req, res) => {
+  try {
+    const { storyId } = req.params;
+    const userId = req.user._id;
+
+    // Find the story to delete
+    const story = await Story.findOne({ _id: storyId, user: userId });
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found or you are not authorized to delete this story' });
+    }
+
+    // Delete media from Cloudinary (if it exists)
+    const publicId = story.mediaUrl.split("/").pop().split(".")[0];  // Assuming the URL contains the public ID
+    await cloudinary.uploader.destroy(publicId);
+
+    // Delete the story from the database
+    await Story.deleteOne({ _id: storyId });
+
+    return res.status(200).json({ message: 'Story deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting story:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+const viewStory = async (req, res) => {
+  try {
+    const { storyId } = req.params;
+    const userId = req.user._id; // Assumes req.user._id is populated by middleware
+
+    // Find the story
+    const story = await Story.findById(storyId).populate('viewedBy', 'username profilePic');
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+
+    // Check if the user has already viewed the story
+    const hasViewed = story.viewedBy.some(viewer => viewer._id.toString() === userId.toString());
+    
+    if (!hasViewed) {
+      // Add userId to the viewedBy array and increment the viewCount only once
+      story.viewedBy.push({ _id: userId });
+      story.viewCount += 1;
+      await story.save();
+    }
+
+    // Return updated viewers list and view count
+    return res.status(200).json({
+      message: 'Story marked as viewed',
+      viewers: story.viewedBy,
+      viewCount: story.viewCount
+    });
+  } catch (error) {
+    console.error('Error viewing story:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+const getStoryViews = async (req, res) => {
+  try {
+    const { storyId } = req.params; // Get the storyId from the request parameters
+    const userId = req.user._id; // Get the logged-in user ID from the request
+
+    // Find the story by ID and populate the 'viewedBy' field with user details
+    const story = await Story.findById(storyId).populate('viewedBy', 'username name profilePic');
+
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+
+    // Return the list of users who have viewed the story
+    return res.status(200).json({ viewers: story.viewedBy });
+  } catch (error) {
+    console.error('Error fetching story views:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export { getStoryViews,createStory, getAllStory,viewStory,deleteStory };

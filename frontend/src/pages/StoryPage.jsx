@@ -23,9 +23,9 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '@chakra-ui/react';
 
-const StoryPage = ({ currentUserId }) => {
+const StoryPage = ({ currentUserId, loggedInUser  }) => {
     const navigate = useNavigate();
-    const [groupedStories, setGroupedStories] = useState([]);
+    const [groupedStories, setGroupedStories] = useState([]);  // Holds grouped stories
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [file, setFile] = useState(null);
@@ -38,7 +38,7 @@ const StoryPage = ({ currentUserId }) => {
     useEffect(() => {
         fetchStories();
     }, []);
-
+    
     // Fetch stories from the server
     const fetchStories = async () => {
         setLoading(true);
@@ -59,16 +59,17 @@ const StoryPage = ({ currentUserId }) => {
                 return acc;
             }, {});
 
-            // Convert object to array and move the current user's story to the beginning
+            // Convert object to array
             const storiesArray = Object.values(grouped);
-            const currentUserStoryIndex = storiesArray.findIndex(group => group.user._id === currentUserId);
 
-            if (currentUserStoryIndex > -1) {
-                const [currentUserStory] = storiesArray.splice(currentUserStoryIndex, 1);
-                storiesArray.unshift(currentUserStory); // Add current user's story at the beginning
-            }
+            // Separate own story and other users' stories
+            const ownStory = storiesArray.find((group) => group.user._id === loggedInUser ?._id);
+            const otherUsersStories = storiesArray.filter((group) => group.user._id !== loggedInUser ?._id);
 
-            setGroupedStories(storiesArray);
+            // If there are other users' stories, place the own story at the start
+            const orderedStories = ownStory ? [ownStory, ...otherUsersStories] : otherUsersStories;
+
+            setGroupedStories(orderedStories); // Set ordered stories
         } catch (error) {
             console.error("Error fetching stories:", error);
         } finally {
@@ -125,7 +126,7 @@ const StoryPage = ({ currentUserId }) => {
             await axios.post('/api/stories/create', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                },
+ },
             });
             toast({
                 title: 'Story uploaded successfully!',
@@ -204,7 +205,7 @@ const StoryPage = ({ currentUserId }) => {
                 {/* Upload Story Modal */}
                 <Modal isOpen={isUploadOpen} onClose={onUploadClose} size="md" isCentered >
                     <ModalOverlay />
-                    <ModalContent  background={colorMode === 'dark' ? "blackAlpha.900" : 'white'}> 
+                    <ModalContent background={colorMode === 'dark' ? "blackAlpha.900" : 'white'}> 
                         <ModalCloseButton />
                         <ModalBody>
                             <Text mb={4}>Upload a Story</Text>

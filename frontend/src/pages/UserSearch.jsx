@@ -58,7 +58,7 @@ const UserSearch = () => {
 					<Spinner />
 				) : users.length === 0 ? (
 					<Text textAlign="center" color="gray.500" mt={4}>
-						जैसे आप खोजने की कोशिश कर रहे हैं, वो यहाँ खाता नहीं बनाया है{" "}
+						Sorry User is Not Found{" "}
 						<span role="img" aria-label="thinking">🤔</span>{" "}
 						<span role="img" aria-label="sad">😞</span>
 					</Text>
