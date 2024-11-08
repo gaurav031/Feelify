@@ -23,8 +23,6 @@ const Post = ({ post, postedBy }) => {
     const getUser = async () => {
       try {
         const userIdOrUsername = postedBy?._id || postedBy;
-        console.log("Fetching profile for:", userIdOrUsername);
-  
         const res = await fetch("/api/users/profile/" + userIdOrUsername);
         const data = await res.json();
         if (data.error) {
@@ -99,7 +97,7 @@ const Post = ({ post, postedBy }) => {
         <Flex flexDirection={"column"} alignItems={"center"}>
           <Avatar
             size="md"
-            name={post.postedBy.name || "User  "} // Fallback name
+            name={user.name || "User  "} // Fallback name
             src={user.profilePic || "/default-profile-pic.png"} // Access profilePic from the post's postedBy
             onClick={(e) => {
               e.preventDefault();

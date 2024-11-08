@@ -49,9 +49,11 @@ const createPost = async (req, res) => {
     }
 };
 
+
 const getPost = async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
+        console.log("Fetched post:", post); // Log the fetched post
 
         if (!post) {
             return res.status(404).json({ error: "Post not found" });
@@ -59,7 +61,7 @@ const getPost = async (req, res) => {
 
         res.status(200).json(post);
     } catch (err) {
-        // Change: Removed specific error message
+        console.error("Error fetching post:", err); // Log the error
         res.status(500).json({ error: "An error occurred" });
     }
 };
