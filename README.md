@@ -7,6 +7,10 @@ Feature List:
 -   📝 Create Post
 -   🗑️ Delete Post
 -   ❤️ Like/Unlike Post
+-   ❤️Add Story
+-   🙋‍♂️See the Reels Page
+-   🤖See the notification
+-   👩See the Follower and Following list 
 -   💬 Comment to a Post
 -   👥 Follow/Unfollow Users
 -   ❄️ Freeze Your Account
