@@ -182,16 +182,22 @@ const VideoFeedPage = () => {
                                             borderRadius="5px"
                                             zIndex="1" // Ensure the profile section appears above the image
                                         >
-                                            <Link to={`/${post.postedBy?.username}`}>
-                                                <Avatar
-                                                     src={post.postedBy?.profilePic || "/default-avatar.png"}
-                                                    alt="User Profile"
-                                                    boxSize={["40px", "40px", "60px"]}
-                                                    borderRadius="full"
-                                                    mr={2}
-                                                />
-                                            </Link>
-                                            <Text mt={-2} fontWeight="thin">@{post.postedBy?.username}</Text>
+                                            {post.postedBy ? (
+                                                <>
+                                                    <Link to={`/${post.postedBy.username}`}>
+                                                        <Avatar
+                                                            src={post.postedBy.profilePic || "/default-avatar.png"}
+                                                            alt="User Profile"
+                                                            boxSize={["40px", "40px", "60px"]}
+                                                            borderRadius="full"
+                                                            mr={2}
+                                                        />
+                                                    </Link>
+                                                    <Text mt={-2} fontWeight="thin">@{post.postedBy.username}</Text>
+                                                </>
+                                            ) : (
+                                                <Text mt={-2} fontWeight="thin">@Anonymous</Text>
+                                            )}
                                         </Box>
 
                                         {/* Caption */}
