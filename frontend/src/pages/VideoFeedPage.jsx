@@ -182,16 +182,16 @@ const VideoFeedPage = () => {
                                             borderRadius="5px"
                                             zIndex="1" // Ensure the profile section appears above the image
                                         >
-                                          
+                                            <Link to={`/${post.postedBy?.username}`}>
                                                 <Avatar
-                                                    src={post.postedBy.profilePic}
+                                                     src={post.postedBy?.profilePic || "/default-avatar.png"}
                                                     alt="User Profile"
                                                     boxSize={["40px", "40px", "60px"]}
                                                     borderRadius="full"
                                                     mr={2}
                                                 />
-                                         
-                                            <Text mt={-2} fontWeight="thin">@{post.postedBy.username}</Text>
+                                            </Link>
+                                            <Text mt={-2} fontWeight="thin">@{post.postedBy?.username}</Text>
                                         </Box>
 
                                         {/* Caption */}

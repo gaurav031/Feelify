@@ -64,7 +64,8 @@ const getPost = async (req, res) => {
         console.error("Error fetching post:", err); // Log the error
         res.status(500).json({ error: "An error occurred" });
     }
-};
+}; 
+
 
 const deletePost = async (req, res) => {
     try {
@@ -221,31 +222,24 @@ const getFeedPosts = async (req, res) => {
         const userId = req.user._id;
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ error: "User  not found" });
+            return res.status(404).json({ error: "User not found" });
         }
 
         const following = user.following;
 
-        // Get all video posts (whether or not the user is following the creator)
-        const videoPosts = await Post.find({
-            video: { $exists: true }, 
+        // Get all posts (videos, images, and text) whether or not the user is following the creator
+        const allPosts = await Post.find({
+            $or: [
+                { postedBy: { $in: following } }, // Posts from followed users
+                { video: { $exists: true } }      // All video posts
+            ]
         })
         .populate('postedBy', 'profilePic username') // Populate user data
-        .sort({ createdAt: -1 });
-
-        // Get image and text posts from the users the current user is following
-        const feedPosts = await Post.find({
-            postedBy: { $in: following },  // Only posts from followed users
-            video: { $exists: false }       // Ensure it's not a video post
-        })
-        .populate('postedBy', 'profilePic username') // Populate user data
-        .sort({ createdAt: -1 });
-
-        // Combine the video posts and the followed posts
-        const allPosts = [...videoPosts, ...feedPosts];
+        .sort({ createdAt: -1 }); // Sort by latest posts first
 
         res.status(200).json(allPosts);
     } catch (err) {
+        console.error("Error fetching feed posts:", err);
         res.status(500).json({ error: "An error occurred" });
     }
 };
