@@ -24,9 +24,14 @@ const HomePage = () => {
           return;
         }
         console.log(data);
-        setPosts(data);
+        // Ensure data is an array before setting
+        if (Array.isArray(data)) {
+          setPosts(data);
+        } else {
+          showToast("Error", "Invalid data format received.", "error");
+        }
       } catch (error) {
-        showToast("Error", error.message, "error");
+        showToast("Error", error.message || "An error occurred", "error");
       } finally {
         setLoading(false);
       }
@@ -36,7 +41,7 @@ const HomePage = () => {
 
   return (
     <>
-      <Box  > 
+      <Box> 
         <StoryPage />
       </Box>
       <Flex gap={10} alignItems="flex-start" direction={{ base: "column", md: "row" }} >
