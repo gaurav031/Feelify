@@ -6,67 +6,62 @@ import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
 import Notification from "../models/notificationModel.js";
 
-
+// Get User Profile by ID or Username
 const getUserProfile = async (req, res) => {
 	const { query } = req.params;
-
 	try {
-		let user;
 		const isObjectId = mongoose.Types.ObjectId.isValid(query);
 		const queryObject = isObjectId ? { _id: query } : { username: query };
 
-		user = await User.findOne(queryObject).select("-password -updatedAt");
-
+		// Fetch user excluding sensitive fields
+		const user = await User.findOne(queryObject).select("-password -updatedAt");
 		if (!user) {
-			return res.status(404).json({});
+			return res.status(404).json({ message: "User not found" });
 		}
 
-		return res.status(200).json(user);
+		res.status(200).json(user);
 	} catch (err) {
-		return res.status(500).json({});
-	}
-};
-const searchUser = async (req, res) => {
-	try {
-		// Extract search query from the request query parameters
-		const { query } = req.query;
-
-		if (!query) {
-			return res.status(400).json({ message: "Search query is required" });
-		}
-
-		// Perform a case-insensitive search for users by `username` or `name`
-		const users = await User.find({
-			$or: [
-				{ username: { $regex: query, $options: "i" } }, // Case-insensitive search for username
-				{ name: { $regex: query, $options: "i" } }      // Case-insensitive search for name
-			]
-		}).select("-password -updatedAt -email"); // Exclude sensitive fields
-
-		// Check if users were found and return appropriate response
-		if (!users.length) {
-			return res.status(404).json({ message: "No users found" });
-		}
-
-		// Return the search results
-		res.status(200).json(users);
-	} catch (error) {
-		console.error("Error in searchUser: ", error.message); // Log the error
+		console.error("Error in getUserProfile: ", err.message);
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
 
+// Search Users by Username or Name
+const searchUser = async (req, res) => {
+	try {
+		const { query } = req.query;
+		if (!query) {
+			return res.status(400).json({ message: "Search query is required" });
+		}
 
+		const users = await User.find({
+			$or: [
+				{ username: { $regex: query, $options: "i" } },
+				{ name: { $regex: query, $options: "i" } }
+			]
+		}).select("-password -updatedAt -email");
 
+		if (users.length === 0) {
+			return res.status(404).json({ message: "No users found" });
+		}
 
+		res.status(200).json(users);
+	} catch (error) {
+		console.error("Error in searchUser: ", error.message);
+		res.status(500).json({ message: "Internal server error" });
+	}
+};
+// Sign up a New User
 const signupUser = async (req, res) => {
 	try {
 		const { name, email, username, password } = req.body;
-		const user = await User.findOne({ $or: [{ email }, { username }] });
 
-		if (user) {
-			return res.status(400).send(); // Do not send error message
+		// Check if user already exists with the same email or username
+		const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+		if (existingUser) {
+			return res.status(400).json({ message: "User already exists" });
 		}
+
 		const salt = await bcrypt.genSalt(10);
 		const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -74,58 +69,50 @@ const signupUser = async (req, res) => {
 			name,
 			email,
 			username,
-			password: hashedPassword,
+			password: hashedPassword
 		});
+
 		await newUser.save();
 
-		if (newUser) {
-			generateTokenAndSetCookie(newUser._id, res);
+		generateTokenAndSetCookie(newUser._id, res);
 
-			res.status(201).json({
-				_id: newUser._id,
-				name: newUser.name,
-				email: newUser.email,
-				username: newUser.username,
-				bio: newUser.bio,
-				profilePic: newUser.profilePic,
-			});
-		} else {
-			res.status(400).send(); // Do not send error message
-		}
+		res.status(201).json({
+			_id: newUser._id,
+			name: newUser.name,
+			email: newUser.email,
+			username: newUser.username,
+			bio: newUser.bio,
+			profilePic: newUser.profilePic,
+		});
 	} catch (err) {
-		console.log("Error in signupUser: ", err.message); // Log error
-		res.status(500).send(); // Do not send error message
+		console.error("Error in signupUser: ", err.message);
+		res.status(500).json({ message: "Internal server error" });
 	}
 };
 
-
+// Login User
 const loginUser = async (req, res) => {
 	try {
 		const { username, password } = req.body;
+
 		const user = await User.findOne({ username });
-
-		// Check if user exists
 		if (!user) {
-			return res.status(404).json({ error: "User not found" }); // Changed "message" to "error"
+			return res.status(404).json({ error: "User not found" });
 		}
 
-		// Compare password
 		const isPasswordCorrect = await bcrypt.compare(password, user.password);
-
 		if (!isPasswordCorrect) {
-			return res.status(400).json({ error: "Incorrect password" }); // Changed "message" to "error"
+			return res.status(400).json({ error: "Incorrect password" });
 		}
 
-		// If the user is frozen, unfreeze it
+		// If the account is frozen, unfreeze it upon successful login
 		if (user.isFrozen) {
 			user.isFrozen = false;
 			await user.save();
 		}
 
-		// Generate token and set cookie
 		generateTokenAndSetCookie(user._id, res);
 
-		// Respond with user data
 		res.status(200).json({
 			_id: user._id,
 			name: user.name,
@@ -135,10 +122,68 @@ const loginUser = async (req, res) => {
 			profilePic: user.profilePic,
 		});
 	} catch (error) {
-		console.log("Error in loginUser: ", error.message); // Log error
-		res.status(500).send(); // Internal server error
+		console.error("Error in loginUser: ", error.message);
+		res.status(500).json({ message: "Internal server error" });
 	}
 };
+
+// Follow or Unfollow a User
+const followUnFollowUser = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const currentUserId = req.user._id.toString();
+
+		if (id === currentUserId) {
+			return res.status(400).json({ message: "You cannot follow yourself" });
+		}
+
+		const userToModify = await User.findById(id);
+		const currentUser = await User.findById(currentUserId);
+
+		if (!userToModify || !currentUser) {
+			return res.status(404).json({ message: "User not found" });
+		}
+
+		const isFollowing = currentUser.following.includes(id);
+
+		if (isFollowing) {
+			// Unfollow the user
+			userToModify.followers.pull(currentUserId);
+			currentUser.following.pull(id);
+		} else {
+			// Follow the user
+			userToModify.followers.push(currentUserId);
+			currentUser.following.push(id);
+
+			// Create a follow notification
+			const newNotification = new Notification({
+				userId: userToModify._id,
+				senderId: currentUserId,
+				type: "follow",
+				message: `${currentUser.name} started following you.`,
+			});
+			await newNotification.save();
+
+			// Emit a socket event
+			if (req.io) {
+				req.io.to(userToModify._id.toString()).emit("userFollowed", {
+					userId: currentUserId,
+					message: `${currentUser.name} started following you.`,
+				});
+			}
+		}
+
+		await userToModify.save();
+		await currentUser.save();
+
+		res.status(200).json({ message: isFollowing ? "User unfollowed" : "User followed" });
+	} catch (err) {
+		console.error("Error in followUnFollowUser: ", err.message);
+		res.status(500).json({ message: "Internal server error" });
+	}
+};
+
+
 
 const logoutUser = (req, res) => {
 	try {
@@ -150,65 +195,7 @@ const logoutUser = (req, res) => {
 	}
 };
 
-const followUnFollowUser = async (req, res) => {
-	try {
-		const { id } = req.params;
 
-		// Prevent a user from following themselves
-		if (id === req.user._id.toString()) {
-			return res.status(400).json({ message: "You cannot follow yourself" });
-		}
-
-		const [userToModify, currentUser] = await Promise.all([
-			User.findById(id),
-			User.findById(req.user._id),
-		]);
-
-		// Ensure both users exist
-		if (!userToModify || !currentUser) {
-			return res.status(404).json({ message: "User not found" });
-		}
-
-		// Check if the user is already following the target user
-		const isFollowing = currentUser.following.includes(id);
-
-		if (isFollowing) {
-			// Unfollow the user
-			userToModify.followers.pull(req.user._id);
-			currentUser.following.pull(id);
-			await Promise.all([userToModify.save(), currentUser.save()]);
-
-			res.status(200).json({ message: "User unfollowed successfully" });
-		} else {
-			// Follow the user
-			userToModify.followers.push(req.user._id);
-			currentUser.following.push(id);
-			await Promise.all([userToModify.save(), currentUser.save()]);
-
-			// Create and send a follow notification
-			const newNotification = new Notification({
-				userId: userToModify._id,
-				senderId: req.user._id,
-				type: 'follow',
-				message: `${req.user.name} started following you.`,
-			});
-			await newNotification.save();
-
-			// Emit a socket event to notify the followed user
-			if (req.io) {
-				req.io.to(userToModify._id.toString()).emit("userFollowed", {
-					userId: req.user._id,
-					message: `${req.user.name} started following you.`,
-				});
-			}
-
-			res.status(200).json({ message: "User followed successfully" });
-		}
-	} catch (err) {
-		console.error("Error in followUnFollowUser:", err);
-		res.status(500).send(); // Internal server error
-	}
-};
 
 const getFollowers = async (req, res) => {
 	try {
