@@ -12,14 +12,14 @@ import { DeleteIcon } from "@chakra-ui/icons";
 import postsAtom from "../atoms/postsAtom";
 
 const PostPage = () => {
-	const { user, loading } = useGetUserProfile();
+	const { user, loading: userLoading } = useGetUserProfile();
 	const [posts, setPosts] = useRecoilState(postsAtom);
 	const showToast = useShowToast();
 	const { pid } = useParams();
 	const currentUser  = useRecoilValue(userAtom);
 	const navigate = useNavigate();
 
-	const currentPost = posts[0];
+	const currentPost = posts.length > 0 ? posts[0] : null;
 
 	useEffect(() => {
 		const getPost = async () => {
@@ -52,13 +52,14 @@ const PostPage = () => {
 				return;
 			}
 			showToast("Success", "Post deleted", "success");
+			setPosts([]); // Clear posts after deletion
 			navigate(`/${user.username}`);
 		} catch (error) {
 			showToast("Error", error.message, "error");
 		}
 	};
 
-	if (!user && loading) {
+	if (userLoading) {
 		return (
 			<Flex justifyContent={"center"}>
 				<Spinner size={"xl"} />
@@ -67,13 +68,12 @@ const PostPage = () => {
 	}
 
 	if (!currentPost) return null;
-	console.log("currentPost", currentPost);
 
 	return (
 		<>
 			<Flex>
 				<Flex w={"full"} alignItems={"center"} gap={3}>
-					<Avatar src={user.profilePic} size={"md"} name='Mark Zuckerberg' />
+					<Avatar src={user.profilePic} size={"md"} name={user.username} />
 					<Flex>
 						<Text fontSize={"sm"} fontWeight={"bold"}>
 							{user.username}
@@ -96,7 +96,7 @@ const PostPage = () => {
 
 			{/* Render image if it exists */}
 			{currentPost.img && (
-				<Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
+ <Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
 					<Image src={currentPost.img} w={"full"} />
 				</Box>
 			)}
@@ -109,7 +109,7 @@ const PostPage = () => {
 			)}
 
 			<Flex gap={3} my={3}>
-				 <Actions post={currentPost} />
+				<Actions post={currentPost} />
 			</Flex>
 
 			<Divider my={4} />
@@ -118,7 +118,6 @@ const PostPage = () => {
 					key={reply._id}
 					reply={reply}
 					lastReply={reply._id === currentPost.replies[currentPost.replies.length - 1]._id}
-					
 				/>
 			))}
 		</>

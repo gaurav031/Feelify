@@ -114,15 +114,16 @@ const Header = () => {
 								</Text>
 							)}
 						</Link>
-						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/${user.username}`}>
-							<Avatar size="sm" src={user?.profilePic} />
-						</Link>
+						
 
 						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/chat`}>
-							<BsFillChatQuoteFill size={20} />
+							<BsFillChatQuoteFill size={24} />
 						</Link>
-						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/settings`}>
-							<MdOutlineSettings size={20} />
+						<Link as={RouterLink}  to={`/settings`}>
+							<MdOutlineSettings size={24} />
+						</Link>
+						<Link as={RouterLink} display={{ base: "none", md: "flex" }} to={`/${user.username}`}>
+							<Avatar size="sm" src={user?.profilePic} />
 						</Link>
 						
 					</Flex>

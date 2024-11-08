@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Box, Flex, Text, Button, Spinner, Avatar } from "@chakra-ui/react";
 import axios from "axios";
 import VideoAction from "../components/VideoAction";
+import { Link } from "react-router-dom";
 
 const VideoFeedPage = () => {
     const [posts, setPosts] = useState([]);
@@ -41,7 +42,7 @@ const VideoFeedPage = () => {
     const handleScroll = () => {
         const container = containerRef.current;
         if (
-            container.scrollHeight - container.scrollTop <= container.clientHeight &&
+            container.scrollHeight - container.scrollTop <= container.clientHeight + 50 && // Added a threshold of 50px
             !loading &&
             hasMore
         ) {
@@ -181,13 +182,15 @@ const VideoFeedPage = () => {
                                             borderRadius="5px"
                                             zIndex="1" // Ensure the profile section appears above the image
                                         >
-                                            <Avatar
-                                                src={post.postedBy.profilePic}
-                                                alt="User Profile"
-                                                boxSize={["40px", "40px", "60px"]}
-                                                borderRadius="full"
-                                                mr={2}
-                                            />
+                                            <Link to={`/${post.postedBy.username}`}>
+                                                <Avatar
+                                                    src={post.postedBy.profilePic}
+                                                    alt="User Profile"
+                                                    boxSize={["40px", "40px", "60px"]}
+                                                    borderRadius="full"
+                                                    mr={2}
+                                                />
+                                            </Link>
                                             <Text mt={-2} fontWeight="thin">@{post.postedBy.username}</Text>
                                         </Box>
 

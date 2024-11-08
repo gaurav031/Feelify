@@ -22,10 +22,11 @@ const Post = ({ post, postedBy }) => {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    const getUser = async () => {
+    const getUser  = async () => {
       try {
         const res = await fetch("/api/users/profile/" + postedBy);
         const data = await res.json();
+        console.log(data); // Log the response
         if (data.error) {
           showToast("Error", data.error, "error");
           return;
@@ -86,17 +87,18 @@ const Post = ({ post, postedBy }) => {
   }, [videoRef]);
 
   if (!user) return null;
+
   return (
-    <Link to={`/${user.username}/post/${post._id}`}>
+    <Link to={`/${post.postedBy.username}/post/${post._id}`}>
       <Flex gap={3} mb={4} py={5}>
         <Flex flexDirection={"column"} alignItems={"center"}>
           <Avatar
             size="md"
-            name={user.name}
-            src={user?.profilePic}
+            name={post.postedBy.name || "User "} // Fallback name
+            src={post.postedBy.profilePic || "/default-profile-pic.png"} // Access profilePic from the post's postedBy
             onClick={(e) => {
               e.preventDefault();
-              navigate(`/${user.username}`);
+              navigate(`/${post.postedBy.username}`);
             }}
           />
           <Box w="1px" h={"full"} bg="gray.light" my={2}></Box>
@@ -113,7 +115,6 @@ const Post = ({ post, postedBy }) => {
                 padding={"2px"}
               />
             )}
-
             {post.replies[1] && (
               <Avatar
                 size="xs"
@@ -125,7 +126,6 @@ const Post = ({ post, postedBy }) => {
                 padding={"2px"}
               />
             )}
-
             {post.replies[2] && (
               <Avatar
                 size="xs"
@@ -147,10 +147,10 @@ const Post = ({ post, postedBy }) => {
                 fontWeight={"bold"}
                 onClick={(e) => {
                   e.preventDefault();
-                  navigate(`/${user.username}`);
+                  navigate(`/${post.postedBy.username}`);
                 }}
               >
-                {user?.username}
+                {post.postedBy.username}
               </Text>
               <Image src="/verified.png" w={4} h={4} ml={1} />
             </Flex>
@@ -159,7 +159,7 @@ const Post = ({ post, postedBy }) => {
                 {formatDistanceToNow(new Date(post.createdAt))} ago
               </Text>
 
-              {currentUser?._id === user._id && <DeleteIcon size={20} onClick={handleDeletePost} />}
+              {currentUser?._id === post.postedBy._id && <DeleteIcon size={20} onClick={handleDeletePost} />}
             </Flex>
           </Flex>
 

@@ -137,11 +137,13 @@ const StoryModalPage = () => {
                     />
 
                     <Flex position="absolute" top={1} left={39} align="center" p={2} borderRadius="md" zIndex={10}>
+                    <Link to={`/${story.user.username}`}>
                         <Avatar
                             src={story.user.profilePic}
                             size="md"
                             border="3px solid blue"
                         />
+                    </Link>
                         <Box ml={2}>
                             <Text fontWeight="bold">{story.user.username}</Text>
                             <Text fontSize="sm" mt={1}>{formattedDate}</Text>

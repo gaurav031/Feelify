@@ -6,31 +6,23 @@ import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
 import Notification from "../models/notificationModel.js";
 
+
 const getUserProfile = async (req, res) => {
-    // Extract query from request parameters
     const { query } = req.params;
 
     try {
         let user;
-
-        // Check if query is a valid ObjectId or username
         const isObjectId = mongoose.Types.ObjectId.isValid(query);
-
-        // Create query object based on the type of query
         const queryObject = isObjectId ? { _id: query } : { username: query };
 
-        // Fetch the user, excluding password and updatedAt fields
         user = await User.findOne(queryObject).select("-password -updatedAt");
 
-        // If user is not found, return a 404 status code with an empty JSON object
         if (!user) {
             return res.status(404).json({});
         }
 
-        // Return the user profile
         return res.status(200).json(user);
     } catch (err) {
-        // Return a 500 status code with an empty JSON object
         return res.status(500).json({});
     }
 };
