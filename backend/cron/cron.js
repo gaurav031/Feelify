@@ -1,7 +1,7 @@
 import cron from "cron";
 import http from "http"; // Use the http module for http requests
 
-const URL = "http://localhost:3000"; // Keep this as http since it's localhost
+const URL = "http://localhost:5000"; // Keep this as http since it's localhost
 
 const job = new cron.CronJob("*/14 * * * *", function () {
     http // Change to use http.get

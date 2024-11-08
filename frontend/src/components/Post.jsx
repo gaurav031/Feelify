@@ -12,9 +12,9 @@ import userAtom from "../atoms/userAtom";
 import postsAtom from "../atoms/postsAtom";
 
 const Post = ({ post, postedBy }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser ] = useState(null);
   const showToast = useShowToast();
-  const currentUser = useRecoilValue(userAtom);
+  const currentUser  = useRecoilValue(userAtom);
   const [posts, setPosts] = useRecoilState(postsAtom);
   const navigate = useNavigate();
 
@@ -24,21 +24,21 @@ const Post = ({ post, postedBy }) => {
   useEffect(() => {
     const getUser  = async () => {
       try {
-        const res = await fetch("/api/users/profile/" + postedBy);
+        const res = await fetch(`/api/users/profile/${postedBy}`);
         const data = await res.json();
-        
+
         if (data.error) {
           showToast("Error", data.error, "error");
           return;
         }
-        setUser(data);
+        setUser (data);
       } catch (error) {
         showToast("Error", error.message, "error");
-        setUser(null);
+        setUser (null);
       }
     };
 
-    getUser();
+    getUser ();
   }, [postedBy, showToast]);
 
   const handleDeletePost = async (e) => {
@@ -94,7 +94,7 @@ const Post = ({ post, postedBy }) => {
         <Flex flexDirection={"column"} alignItems={"center"}>
           <Avatar
             size="md"
-            name={post.postedBy.name || "User "} // Fallback name
+            name={post.postedBy.name || "User  "} // Fallback name
             src={post.postedBy.profilePic || "/default-profile-pic.png"} // Access profilePic from the post's postedBy
             onClick={(e) => {
               e.preventDefault();
@@ -104,39 +104,19 @@ const Post = ({ post, postedBy }) => {
           <Box w="1px" h={"full"} bg="gray.light" my={2}></Box>
           <Box position={"relative"} w={"full"}>
             {post.replies.length === 0 && <Text textAlign={"center"}>🥱</Text>}
-            {post.replies[0] && (
+            {post.replies.map((reply, index) => (
               <Avatar
+                key={index}
                 size="xs"
-                name="John doe"
-                src={post.replies[0].userProfilePic}
+                name={reply.userName || "User "} // Use actual name from reply
+                src={reply.userProfilePic}
                 position={"absolute"}
-                top={"0px"}
-                left="15px"
+                top={index === 0 ? "0px" : index === 1 ? "0px" : "0px"}
+                left={index === 0 ? "15px" : index === 1 ? "-5px" : "4px"}
+                right={index === 1 ? "-5px" : undefined}
                 padding={"2px"}
               />
-            )}
-            {post.replies[1] && (
-              <Avatar
-                size="xs"
-                name="John doe"
-                src={post.replies[1].userProfilePic}
-                position={"absolute"}
-                bottom={"0px"}
-                right="-5px"
-                padding={"2px"}
-              />
-            )}
-            {post.replies[2] && (
-              <Avatar
-                size="xs"
-                name="John doe"
-                src={post.replies[2].userProfilePic}
-                position={"absolute"}
-                bottom={"0px"}
-                left="4px"
-                padding={"2px"}
-              />
-            )}
+            ))}
           </Box>
         </Flex>
         <Flex flex={1} flexDirection={"column"} gap={2}>
@@ -152,14 +132,16 @@ const Post = ({ post, postedBy }) => {
               >
                 {post.postedBy.username}
               </Text>
-              <Image src="/verified.png" w={4} h={4} ml={1} />
+              <Image src="/verified.png" w={4} h={4} ml={1} alt="Verified" />
             </Flex>
             <Flex gap={4} alignItems={"center"}>
               <Text fontSize={"xs"} width={36} textAlign={"right"} color={"gray.light"}>
                 {formatDistanceToNow(new Date(post.createdAt))} ago
               </Text>
 
-              {currentUser?._id === post.postedBy._id && <DeleteIcon size={20} onClick={handleDeletePost} />}
+              {currentUser ?._id === post.postedBy._id && (
+                <DeleteIcon size={20} onClick={handleDeletePost} cursor="pointer" />
+              )}
             </Flex>
           </Flex>
 
@@ -175,7 +157,7 @@ const Post = ({ post, postedBy }) => {
           {/* Keep the image rendering logic */}
           {post.img && (
             <Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
-              <Image src={post.img} w={"full"} />
+              <Image src={post.img} w={"full"} alt="Post image" />
             </Box>
           )}
 
