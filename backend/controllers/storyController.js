@@ -17,11 +17,6 @@ const createStory = async (req, res) => {
       return res.status(400).json({ error: "File is required to create a story" });
     }
 
-    // Validate media type
-    if (mediaType !== 'image' && mediaType !== 'video') {
-      return res.status(400).json({ error: "Invalid media type" });
-    }
-
     // Upload media to Cloudinary from memory
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
@@ -41,8 +36,7 @@ const createStory = async (req, res) => {
       user: userId,
       mediaUrl,
       mediaType,
-      viewedBy: [],  // Initially empty, will be populated when someone views the story
-      viewCount: 0,  // Initialize view count
+      viewedBy: []  // Initially empty, will be populated when someone views the story
     });
 
     await newStory.save();
@@ -53,7 +47,8 @@ const createStory = async (req, res) => {
   }
 };
 
-// Get all stories from followed users
+
+// getAllStory function
 const getAllStory = async (req, res) => {
   try {
     const userId = req.user._id; // Assuming req.user is available through authentication middleware
@@ -68,11 +63,9 @@ const getAllStory = async (req, res) => {
     const followedUserIds = [...currentUser.following, userId];
 
     // Fetch stories from the followed users and the current user
-    const stories = await Story.find({
-      user: { $in: followedUserIds },
-      createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },  // Last 24 hours
-    })
-      .populate('user', 'username profilePic')  // Populate user data
+    const stories = await Story.find({ user: { $in: followedUserIds },
+      createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } })
+      .populate('user', 'username profilePic')
       .sort({ createdAt: -1 });
 
     return res.status(200).json(stories);
@@ -82,7 +75,7 @@ const getAllStory = async (req, res) => {
   }
 };
 
-// Delete a story
+
 const deleteStory = async (req, res) => {
   try {
     const { storyId } = req.params;
@@ -108,7 +101,7 @@ const deleteStory = async (req, res) => {
   }
 };
 
-// View a story
+
 const viewStory = async (req, res) => {
   try {
     const { storyId } = req.params;
@@ -142,7 +135,7 @@ const viewStory = async (req, res) => {
   }
 };
 
-// Get views for a story
+
 const getStoryViews = async (req, res) => {
   try {
     const { storyId } = req.params; // Get the storyId from the request parameters
@@ -163,4 +156,4 @@ const getStoryViews = async (req, res) => {
   }
 };
 
-export { createStory, getAllStory, deleteStory, viewStory, getStoryViews };
+export { getStoryViews,createStory, getAllStory,viewStory,deleteStory };
