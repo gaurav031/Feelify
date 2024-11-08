@@ -8,24 +8,29 @@ import Notification from "../models/notificationModel.js";
 
 // Get User Profile by ID or Username
 const getUserProfile = async (req, res) => {
+	// We will fetch user profile either with username or userId
+	// query is either username or userId
 	const { query } = req.params;
-	try {
-		const isObjectId = mongoose.Types.ObjectId.isValid(query);
-		const queryObject = isObjectId ? { _id: query } : { username: query };
 
-		// Fetch user excluding sensitive fields
-		const user = await User.findOne(queryObject).select("-password -updatedAt");
-		if (!user) {
-			return res.status(404).json({ message: "User not found" });
+	try {
+		let user;
+
+		// query is userId
+		if (mongoose.Types.ObjectId.isValid(query)) {
+			user = await User.findOne({ _id: query }).select("-password").select("-updatedAt");
+		} else {
+			// query is username
+			user = await User.findOne({ username: query }).select("-password").select("-updatedAt");
 		}
+
+		if (!user) return res.status(404).json({ error: "User not found" });
 
 		res.status(200).json(user);
 	} catch (err) {
-		console.error("Error in getUserProfile: ", err.message);
-		res.status(500).json({ message: "Internal server error" });
+		res.status(500).json({ error: err.message });
+		console.log("Error in getUserProfile: ", err.message);
 	}
 };
-
 // Search Users by Username or Name
 const searchUser = async (req, res) => {
 	try {

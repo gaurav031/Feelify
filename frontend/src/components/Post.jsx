@@ -12,34 +12,39 @@ import userAtom from "../atoms/userAtom";
 import postsAtom from "../atoms/postsAtom";
 
 const Post = ({ post, postedBy }) => {
-  const [user, setUser ] = useState(null);
-  const showToast = useShowToast();
-  const currentUser  = useRecoilValue(userAtom);
-  const [posts, setPosts] = useRecoilState(postsAtom);
-  const navigate = useNavigate();
-
-  // Ref for the video element
-  const videoRef = useRef(null);
+  const [user, setUser] = useState(null);
+	const showToast = useShowToast();
+	const currentUser = useRecoilValue(userAtom);
+	const [posts, setPosts] = useRecoilState(postsAtom);
+	const navigate = useNavigate();
 
   useEffect(() => {
-    const getUser  = async () => {
+    console.log("Posted By:", postedBy);
+    const getUser = async () => {
       try {
-        const res = await fetch(`/api/users/profile/${postedBy}`);
+        const userIdOrUsername = postedBy?._id || postedBy;
+        console.log("Fetching profile for:", userIdOrUsername);
+  
+        const res = await fetch("/api/users/profile/" + userIdOrUsername);
         const data = await res.json();
-
         if (data.error) {
           showToast("Error", data.error, "error");
           return;
         }
-        setUser (data);
+        setUser(data);
       } catch (error) {
         showToast("Error", error.message, "error");
-        setUser (null);
+        setUser(null);
       }
     };
-
-    getUser ();
+  
+    getUser();
   }, [postedBy, showToast]);
+  
+
+   // Ref for the video element
+   const videoRef = useRef(null);
+
 
   const handleDeletePost = async (e) => {
     try {
@@ -89,16 +94,16 @@ const Post = ({ post, postedBy }) => {
   if (!user) return null;
 
   return (
-    <Link to={`/${post.postedBy.username}/post/${post._id}`}>
+    <Link to={`/${user.username}/post/${post._id}`}> 
       <Flex gap={3} mb={4} py={5}>
         <Flex flexDirection={"column"} alignItems={"center"}>
           <Avatar
             size="md"
             name={post.postedBy.name || "User  "} // Fallback name
-            src={post.postedBy.profilePic || "/default-profile-pic.png"} // Access profilePic from the post's postedBy
+            src={user.profilePic || "/default-profile-pic.png"} // Access profilePic from the post's postedBy
             onClick={(e) => {
               e.preventDefault();
-              navigate(`/${post.postedBy.username}`);
+              navigate(`/${user.username}`);
             }}
           />
           <Box w="1px" h={"full"} bg="gray.light" my={2}></Box>
@@ -127,10 +132,10 @@ const Post = ({ post, postedBy }) => {
                 fontWeight={"bold"}
                 onClick={(e) => {
                   e.preventDefault();
-                  navigate(`/${post.postedBy.username}`);
+                  navigate(`/${user.username}`);
                 }}
               >
-                {post.postedBy.username}
+                {user.username}
               </Text>
               <Image src="/verified.png" w={4} h={4} ml={1} alt="Verified" />
             </Flex>
