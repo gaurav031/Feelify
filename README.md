@@ -25,7 +25,7 @@ Feature List:
 -   💬 Chat App With Image Support
 -   👀 Seen/Unseen Status for Messages
 -   🔊 Notification sounds
--   ⭐ Deployment for FREE
+
 
 ### Setup .env file
 
@@ -49,3 +49,5 @@ npm run build
 ```shell
 npm start
 ```
+### Deploy Link
+feelify.fun
