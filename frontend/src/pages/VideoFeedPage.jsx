@@ -3,7 +3,6 @@ import { Box, Flex, Text, Button, Spinner, Avatar } from "@chakra-ui/react";
 import axios from "axios";
 import VideoAction from "../components/VideoAction";
 import { Link } from "react-router-dom";
-import useGetUserProfile from "../hooks/useGetUserProfile";
 
 const VideoFeedPage = () => {
     const [posts, setPosts] = useState([]);
@@ -11,10 +10,7 @@ const VideoFeedPage = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const containerRef = useRef(null);
-    const { user, loading: userLoading } = useGetUserProfile();
 
-
-    
     // Define videoRefs to store references to each video element
     const videoRefs = useRef([]);
 
@@ -107,14 +103,6 @@ const VideoFeedPage = () => {
         };
     }, [posts]);
 
-    if (userLoading) {
-		return (
-			<Flex justifyContent={"center"}>
-				<Spinner size={"xl"} />
-			</Flex>
-		);
-	}
-
     return (
         <Box width="100%" height="100vh" overflow="hidden">
             <Flex
@@ -194,15 +182,15 @@ const VideoFeedPage = () => {
                                             borderRadius="5px"
                                             zIndex="1" // Ensure the profile section appears above the image
                                         >
-                                            
+                                          
                                                 <Avatar
-                                                   src={user?.profilePic || post.postedBy.profilePic}
+                                                    src={post.postedBy.profilePic}
                                                     alt="User Profile"
                                                     boxSize={["40px", "40px", "60px"]}
                                                     borderRadius="full"
                                                     mr={2}
                                                 />
-                                       
+                                         
                                             <Text mt={-2} fontWeight="thin">@{post.postedBy.username}</Text>
                                         </Box>
 
