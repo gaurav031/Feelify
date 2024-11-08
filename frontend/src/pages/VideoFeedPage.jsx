@@ -184,7 +184,7 @@ const VideoFeedPage = () => {
                                         >
                                             {post.postedBy ? (
                                                 <>
-                                                    <Link to={`/${post.postedBy.username}`}>
+                                                    
                                                         <Avatar
                                                             src={post.postedBy.profilePic || "/default-avatar.png"}
                                                             alt="User Profile"
@@ -192,7 +192,7 @@ const VideoFeedPage = () => {
                                                             borderRadius="full"
                                                             mr={2}
                                                         />
-                                                    </Link>
+                                                   
                                                     <Text mt={-2} fontWeight="thin">@{post.postedBy.username}</Text>
                                                 </>
                                             ) : (
