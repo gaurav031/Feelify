@@ -148,11 +148,11 @@ const VideoAction = ({ post }) => {
 						strokeWidth='2'
 					></path>
 				</svg>
-				<Link to={`/${post.postedBy.username}/post/${post._id}`}>
+				
 					<Text color={"white"} fontSize='sm' mt={[-5, -10]} >
 						{post.replies.length} replies
 					</Text>
-				</Link>
+			
 			</Flex>
 
 
