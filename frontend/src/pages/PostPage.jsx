@@ -16,7 +16,7 @@ const PostPage = () => {
 	const [posts, setPosts] = useRecoilState(postsAtom);
 	const showToast = useShowToast();
 	const { pid } = useParams();
-	const currentUser  = useRecoilValue(userAtom);
+	const currentUser = useRecoilValue(userAtom);
 	const navigate = useNavigate();
 
 	const currentPost = posts.length > 0 ? posts[0] : null;
@@ -86,7 +86,7 @@ const PostPage = () => {
 						{formatDistanceToNow(new Date(currentPost.createdAt))} ago
 					</Text>
 
-					{currentUser ?._id === user._id && (
+					{currentUser?._id === user._id && (
 						<DeleteIcon size={20} cursor={"pointer"} onClick={handleDeletePost} />
 					)}
 				</Flex>
@@ -96,7 +96,7 @@ const PostPage = () => {
 
 			{/* Render image if it exists */}
 			{currentPost.img && (
- <Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
+				<Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
 					<Image src={currentPost.img} w={"full"} />
 				</Box>
 			)}

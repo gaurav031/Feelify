@@ -19,6 +19,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import useShowToast from "../hooks/useShowToast";
 import postsAtom from "../atoms/postsAtom";
+import { Link } from "react-router-dom";
 
 const VideoAction = ({ post }) => {
 	const user = useRecoilValue(userAtom);
@@ -107,7 +108,7 @@ const VideoAction = ({ post }) => {
 
 	return (
 		<Flex flexDirection='column' alignItems='center'> {/* Changed flexDirection to 'column' */}
-			<Flex  gap={{ base: 35, md: 50 }} my={2}  flexDirection='column' alignItems='center' onClick={(e) => e.preventDefault()}> {/* Added flexDirection and alignItems */}
+			<Flex gap={{ base: 35, md: 50 }} my={2} flexDirection='column' alignItems='center' onClick={(e) => e.preventDefault()}> {/* Added flexDirection and alignItems */}
 				<svg
 					aria-label='Like'
 					color={liked ? "rgb(237, 73, 86)" : ""}
@@ -116,7 +117,7 @@ const VideoAction = ({ post }) => {
 					role='img'
 					viewBox='0 0 24 22'
 					width='30'
-					
+
 					onClick={handleLikeAndUnlike}
 				>
 					<path
@@ -125,7 +126,7 @@ const VideoAction = ({ post }) => {
 						strokeWidth='2'
 					></path>
 				</svg>
-                <Text color={"white"} fontSize='sm'  mt={[-5,-10]} >
+				<Text color={"white"} fontSize='sm' mt={[-5, -10]} >
 					{post.likes.length} likes
 				</Text>
 				<svg
@@ -138,7 +139,7 @@ const VideoAction = ({ post }) => {
 					width='30'
 					onClick={onOpen}
 				>
-				
+
 					<path
 						d='M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22Z'
 						fill='none'
@@ -147,13 +148,14 @@ const VideoAction = ({ post }) => {
 						strokeWidth='2'
 					></path>
 				</svg>
-                <Text color={"white"} fontSize='sm' mt={[-5, -10]} >
-					{post.replies.length} replies
-				</Text>
-				
+				<Link to={`/${post.postedBy.username}/post/${post._id}`}>
+					<Text color={"white"} fontSize='sm' mt={[-5, -10]} >
+						{post.replies.length} replies
+					</Text>
+				</Link>
 			</Flex>
 
-			
+
 
 			<Modal isOpen={isOpen} onClose={onClose}>
 				<ModalOverlay />
@@ -172,12 +174,12 @@ const VideoAction = ({ post }) => {
 
 					<ModalFooter>
 						<Button colorScheme='blue' size={"sm"} mr={3} isLoading={isReplying} onClick={handleReply}>
-							Reply
+							Reply			
 						</Button>
 					</ModalFooter>
 				</ModalContent>
 			</Modal>
-		</Flex>
+		</Flex >
 	);
 };
 
@@ -194,7 +196,7 @@ const RepostSVG = () => {
 			viewBox='0 0 24 24'
 			width='20'
 		>
-			
+
 			<path
 				fill=''
 				d='M19.998 9.497a1 1 0 0 0-1 1v4.228a3.274 3.274 0 0 1-3.27 3.27h-5.313l1.791-1.787a1 1 0 0 0-1.412-1.416L7.29 18.287a1.004 1.004 0 0 0-.294.707v.001c0 .023.012.042.013.065a.923.923 0 0 0 .281.643l3.502 3.504a1 1 0 0 0 1.414-1.414l-1.797-1.798h5.318a5.276 5.276 0 0 0 5.27-5.27v-4.228a1 1 0 0 0-1-1Zm-6.41-3.496-1.795 1.795a1 1 0 1 0 1.414 1.414l3.5-3.5a1.003 1.003 0 0 0 0-1.417l-3.5-3.5a1 1 0 0 0-1.414 1.414l1.794 1.794H8.624a5.272 5.272 0 0 0-5.27 5.27v4.228a1 1 0 0 0 1 1h11.998a1 1 0 0 0 1-1v-4.228a5.276 5.276 0 0 0-5.27-5.27Z'
@@ -214,7 +216,7 @@ const ShareSVG = () => {
 			viewBox='0 0 24 24'
 			width='20'
 		>
-		
+
 			<path
 				fill=''
 				d='M18 2c2.209 0 4 1.791 4 4s-1.791 4-4 4c-1.633 0-3.054-.928-3.734-2.275l-4.58 2.29a2.2 2.2 0 0 0-.217-.14l-.342-.171a3.712 3.712 0 0 0-.635-.332 4.14 4.14 0 0 0-.568-.245l-4.573-2.287A4.003 4.003 0 0 0 6 6c-2.209 0-4 1.791-4 4s1.791 4 4 4c.168 0 .334-.016.5-.026l5.042 2.494a2.013 2.013 0 0 0 2.507-1.077 2.013 2.013 0 0 0-1.073-2.507l-2.573-1.268A2.045 2.045 0 0 0 11 13a2.002 2.002 0 0 0 2 2 2.046 2.046 0 0 0 1.111-.355l5.599-2.797a3.98 3.98 0 0 0 1.073-3.034 4.003 4.003 0 0 0-2.211-3.111A3.992 3.992 0 0 0 18 2Zm0 5c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3Zm-9.85 7.489a2.001 2.001 0 0 0 1.664 2.164l5.065 2.515-2.951 2.951a3.775 3.775 0 0 0-.44-.335l-3.062-1.531a2.014 2.014 0 0 0-2.267 2.3l.531 5.577A3.957 3.957 0 0 0 10.5 22a4 4 0 0 0 2.468-6.928 2.048 2.048 0 0 0 1.491-.679l2.453-2.453-2.963-2.468a1.975 1.975 0 0 0-.49-.396Z'

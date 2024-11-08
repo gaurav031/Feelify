@@ -18,15 +18,29 @@ const HomePage = () => {
       setPosts([]);
       try {
         const res = await fetch("/api/posts/feed");
+        
+        // Check if the response is ok
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
         const data = await res.json();
+        
+        // Check if the data is in the expected format
         if (data.error) {
           showToast("Error", data.error, "error");
           return;
         }
-       
-        setPosts(data);
+
+        // Ensure data is an array before setting
+        if (Array.isArray(data)) {
+          setPosts(data);
+        } else {
+          showToast("Error", "Invalid data format received.", "error");
+        }
       } catch (error) {
-        showToast("Error", error.message, "error");
+        console.error("Error fetching feed posts:", error); // Log the error
+        showToast("Error", error.message || "An error occurred", "error");
       } finally {
         setLoading(false);
       }
@@ -36,10 +50,10 @@ const HomePage = () => {
 
   return (
     <>
-      <Box  > 
+      <Box> 
         <StoryPage />
       </Box>
-      <Flex gap={10} alignItems="flex-start" direction={{ base: "column", md: "row" }} >
+      <Flex gap={10} alignItems="flex-start" direction={{ base: "column", md: "row" }}>
         <Box flex={70}>
           {loading ? (
             <Flex justify="center">
