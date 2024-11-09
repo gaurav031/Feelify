@@ -64,7 +64,15 @@ const ChatPage = () => {
           showToast("Error", data.error, "error");
           return;
         }
-        setConversations(sortConversations(data));
+        // Add fallback for missing profilePic here
+        const formattedData = data.map((conversation) => ({
+          ...conversation,
+          participants: conversation.participants.map((participant) => ({
+            ...participant,
+            profilePic: participant.profilePic || "/default-avatar.png",
+          })),
+        }));
+        setConversations(sortConversations(formattedData));
       } catch (error) {
         showToast("Error", error.message, "error");
       } finally {
@@ -100,7 +108,7 @@ const ChatPage = () => {
           _id: conversationExists._id,
           userId: searchedUser._id,
           username: searchedUser.username,
-          userProfilePic: searchedUser.profilePic,
+          userProfilePic: searchedUser.profilePic || "/default-avatar.png",
         });
         setShowConversations(false);
         return;
@@ -118,7 +126,7 @@ const ChatPage = () => {
           {
             _id: searchedUser._id,
             username: searchedUser.username,
-            profilePic: searchedUser.profilePic,
+            profilePic: searchedUser.profilePic || "/default-avatar.png",
           },
         ],
       };
@@ -133,9 +141,9 @@ const ChatPage = () => {
   const handleConversationClick = (conversation) => {
     setSelectedConversation({
       _id: conversation._id,
-      userId: conversation.participants[0]._id,
-      userProfilePic: conversation.participants[0].profilePic,
-      username: conversation.participants[0].username,
+      userId: conversation.participants[0]?._id,
+      userProfilePic: conversation.participants[0]?.profilePic || "/default-avatar.png",
+      username: conversation.participants[0]?.username,
       mock: conversation.mock,
     });
     setShowConversations(false);
@@ -157,7 +165,6 @@ const ChatPage = () => {
       w={{ base: "100%", md: "80%", lg: "750px" }}
       p={4}
       transform={"translateX(-50%)"}
-      
       borderRadius="lg"
       boxShadow="2xl"
       height={700}
@@ -170,7 +177,7 @@ const ChatPage = () => {
             onClick={handleBackClick}
             variant="ghost"
           />
-          <Avatar size="sm" name={currentUser.name} src={currentUser?.profilePic} ml={-10}/>
+          <Avatar size="sm" name={currentUser.name} src={currentUser?.profilePic || "/default-avatar.png"} ml={-10}/>
           <Text fontWeight={500} fontSize="md" ml={-1}>
             {currentUser.username}
           </Text>
@@ -226,19 +233,19 @@ const ChatPage = () => {
                             onClick={() => handleConversationClick(conversation)}
                         >
                             <Image
-                                src={conversation.participants[0].profilePic}
+                                src={conversation.participants[0]?.profilePic || "/default-avatar.png"}
                                 borderRadius="full"
                                 boxSize="40px"
                                 objectFit="cover"
                                 fallbackSrc="/default-avatar.png"
                             />
                             <Box ml={3}>
-                                <Text fontWeight={700}>{conversation.participants[0].username}</Text>
+                                <Text fontWeight={700}>{conversation.participants[0]?.username || "Unknown"}</Text>
                                 <Text fontSize="sm" color={useColorModeValue("gray.500", "gray.400")}>
                                     {conversation.lastMessage.text || "No messages yet"}
                                 </Text>
                             </Box>
-                            {onlineUsers.includes(conversation.participants[0]._id) && (
+                            {onlineUsers.includes(conversation.participants[0]?._id) && (
                                 <Box
                                     bg="green.400"
                                     borderRadius="full"
@@ -248,7 +255,7 @@ const ChatPage = () => {
                                 />
                             )}
                         </Flex>
-                        {index < conversations.length - 1 && <Divider    my={2} />} {/* Add a divider except after the last item */}
+                        {index < conversations.length - 1 && <Divider my={2} />}
                     </Box>
                 ))}
         </Box>
