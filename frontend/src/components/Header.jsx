@@ -56,7 +56,7 @@ const Header = () => {
 
 	return (
 		<>
-			<Flex justifyContent="space-between" mt={2} mb={3}>
+			<Flex justifyContent="space-between" mt={2} >
 				<Link as={RouterLink} to="/" display={{ base: "none", md: "flex" }}>
 					<AiFillHome size={24} />
 				</Link>

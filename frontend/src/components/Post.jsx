@@ -13,13 +13,14 @@ import postsAtom from "../atoms/postsAtom";
 
 const Post = ({ post, postedBy }) => {
   const [user, setUser] = useState(null);
-	const showToast = useShowToast();
-	const currentUser = useRecoilValue(userAtom);
-	const [posts, setPosts] = useRecoilState(postsAtom);
-	const navigate = useNavigate();
+  const showToast = useShowToast();
+  const currentUser = useRecoilValue(userAtom);
+  const [posts, setPosts] = useRecoilState(postsAtom);
+  const navigate = useNavigate();
+
+  const videoRefs = useRef([]); // Ref for all video elements
 
   useEffect(() => {
-    console.log("Posted By:", postedBy);
     const getUser = async () => {
       try {
         const userIdOrUsername = postedBy?._id || postedBy;
@@ -35,14 +36,48 @@ const Post = ({ post, postedBy }) => {
         setUser(null);
       }
     };
-  
     getUser();
   }, [postedBy, showToast]);
-  
 
-   // Ref for the video element
-   const videoRef = useRef(null);
+  // Function to handle video playback
+  const handleVideoPlayPause = (index) => {
+    videoRefs.current.forEach((video, i) => {
+      if (i === index) {
+        // Play the current video if it's in view
+        video.play();
+      } else {
+        // Pause all other videos
+        video.pause();
+      }
+    });
+  };
 
+  // IntersectionObserver to detect when a video enters or leaves the viewport
+  useEffect(() => {
+    const observers = videoRefs.current.map((video, index) => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              handleVideoPlayPause(index);
+            } else {
+              video.pause();
+            }
+          });
+        },
+        { threshold: 0.5 } // Trigger when 50% of the video is in view
+      );
+
+      observer.observe(video);
+
+      return observer;
+    });
+
+    // Cleanup observers on component unmount
+    return () => {
+      observers.forEach((observer) => observer.disconnect());
+    };
+  }, []);
 
   const handleDeletePost = async (e) => {
     try {
@@ -64,41 +99,16 @@ const Post = ({ post, postedBy }) => {
     }
   };
 
-  useEffect(() => {
-    if (videoRef.current) {
-      // IntersectionObserver to detect when the video enters or leaves the viewport
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              videoRef.current.play();
-            } else {
-              videoRef.current.pause();
-            }
-          });
-        },
-        { threshold: 0.5 } // Trigger when 50% of the video is in view
-      );
-
-      observer.observe(videoRef.current);
-
-      // Cleanup observer on component unmount
-      return () => {
-        if (videoRef.current) observer.unobserve(videoRef.current);
-      };
-    }
-  }, [videoRef]);
-
   if (!user) return null;
 
   return (
-    <Link to={`/${user.username}/post/${post._id}`}> 
+    <Link to={`/${user.username}/post/${post._id}`}>
       <Flex gap={3} mb={4} py={5}>
         <Flex flexDirection={"column"} alignItems={"center"}>
           <Avatar
             size="md"
             name={user.name || "User  "} // Fallback name
-            src={user.profilePic || "/default-profile-pic.png"} // Access profilePic from the post's postedBy
+            src={user.profilePic || "/default-profile-pic.png"}
             onClick={(e) => {
               e.preventDefault();
               navigate(`/${user.username}`);
@@ -111,7 +121,7 @@ const Post = ({ post, postedBy }) => {
               <Avatar
                 key={index}
                 size="xs"
-                name={reply.userName || "User "} // Use actual name from reply
+                name={reply.userName || "User "}
                 src={reply.userProfilePic}
                 position={"absolute"}
                 top={index === 0 ? "0px" : index === 1 ? "0px" : "0px"}
@@ -153,7 +163,13 @@ const Post = ({ post, postedBy }) => {
           {/* Add video rendering logic */}
           {post.video && (
             <Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
-              <video ref={videoRef} src={post.video} width={"100%"} controls />
+              <video
+                ref={(el) => (videoRefs.current[0] = el)} // Assigning ref to the video
+                src={post.video}
+                autoPlay={false}
+                style={{ width: '100%', height: 'auto', borderRadius: '10px' }}
+                controls
+              />
             </Box>
           )}
 

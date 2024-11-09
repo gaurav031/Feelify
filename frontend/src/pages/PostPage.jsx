@@ -104,7 +104,10 @@ const PostPage = () => {
 			{/* Render video if it exists */}
 			{currentPost.video && (
 				<Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
-					<video src={currentPost.video} width={"100%"} controls />
+					<video 
+						src={currentPost.video} width={"100%"}
+						 controls 
+						 />
 				</Box>
 			)}
 

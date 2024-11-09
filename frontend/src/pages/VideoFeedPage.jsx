@@ -10,7 +10,6 @@ const VideoFeedPage = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const containerRef = useRef(null);
-
     const videoRefs = useRef([]);
 
     const fetchPosts = async () => {
@@ -64,71 +63,81 @@ const VideoFeedPage = () => {
         }
     };
 
-    // Swipe handling
-    const [startTouch, setStartTouch] = useState(0);
-    const [isSwiping, setIsSwiping] = useState(false);
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                const videoIndex = Number(entry.target.dataset.index);
+                const video = videoRefs.current[videoIndex];
+                if (entry.isIntersecting) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            });
+        }, { threshold: 0.5 });
 
-    const handleTouchStart = (e, index) => {
-        const touchStart = e.touches[0].clientY;
-        setStartTouch(touchStart);
-        setIsSwiping(true);
-    };
+        posts.forEach((_, index) => {
+            const video = videoRefs.current[index];
+            if (video) observer.observe(video);
+        });
 
-    const handleTouchMove = (e, index) => {
-        if (!isSwiping) return;
-
-        const touchMove = e.touches[0].clientY;
-        const video = videoRefs.current[index];
-
-        if (video) {
-            const moveDistance = touchMove - startTouch;
-            video.style.transform = `translateY(${moveDistance}px)`; // Move the video based on swipe distance
-        }
-    };
-
-    const handleTouchEnd = (e, index) => {
-        if (!isSwiping) return;
-
-        const video = videoRefs.current[index];
-        if (video) {
-            const moveDistance = e.changedTouches[0].clientY - startTouch;
-
-            // Slide video off screen if swipe is significant
-            if (Math.abs(moveDistance) > 100) {
-                const direction = moveDistance > 0 ? 1 : -1; // Swipe up or down
-                video.style.transition = "transform 0.5s ease-in-out";
-                video.style.transform = `translateY(${direction * 100}vh)`; // Move video up or down
-
-                // After the video has moved off-screen, update the feed
-                setTimeout(() => {
-                    setPosts((prevPosts) => prevPosts.slice(1)); // Remove the current video from the feed
-                }, 500); // Allow animation to finish before removing
-            } else {
-                // Reset position if swipe is not significant
-                video.style.transition = "transform 0.3s ease-in-out";
-                video.style.transform = "translateY(0)";
-            }
-        }
-
-        setIsSwiping(false);
-    };
+        return () => {
+            posts.forEach((_, index) => {
+                const video = videoRefs.current[index];
+                if (video) observer.unobserve(video);
+            });
+        };
+    }, [posts]);
 
     return (
         <Box width="100%" height="100vh" overflow="hidden">
-            <Flex direction="column" justify="flex-start" align="center" height="100%" overflow="auto" paddingTop="20px" position="relative">
-                <Box ref={containerRef} display="flex" flexDirection="column" width="100%" overflowY="auto" justifyContent="flex-start" alignItems="center" padding="10px">
+            <Flex
+                direction="column"
+                justify="flex-start"
+                align="center"
+                height="100%"
+                overflow="hidden"
+                paddingTop="20px"
+                position="relative"
+            >
+                <Box
+                    ref={containerRef}
+                    display="flex"
+                    flexDirection="column"
+                    width="100%"
+                    height="100vh"
+                    overflowY="auto"
+                    justifyContent="flex-start"
+                    alignItems="center"
+                    padding="0"
+                    css={{
+                        scrollSnapType: 'y mandatory',
+                    }}
+                >
                     {posts.length > 0 ? (
                         posts.map((post, index) => (
                             post.video && (
-                                <Box key={post._id} mt={2} mb={2} aspectRatio="9 / 16" position="relative" display="flex" justifyContent="center">
+                                <Box
+                                    key={post._id}
+                                    mb={0}
+                                    height="100vh" // Make the container 100vh
+                                    position="relative"
+                                    display="flex"
+                                    justifyContent="center"
+                                    css={{
+                                        scrollSnapAlign: 'start', // Align the video to the start
+                                    }}
+                                >
                                     <Box
                                         position="relative"
-                                        width="100%"
-                                        height="100%"
-                                        background="black"
+                                        mb={15}
+                                        aspectRatio="9 / 16"
+                                        background="black "
                                         display="flex"
                                         justifyContent="center"
                                         alignItems="center"
+                                        width="100%"
+                                        height="100%" // Full height of the parent container
                                     >
                                         <video
                                             ref={(el) => (videoRefs.current[index] = el)}
@@ -140,18 +149,26 @@ const VideoFeedPage = () => {
                                                 objectFit: "cover",
                                                 borderRadius: "8px",
                                                 maxWidth: "100%",
-                                                transition: "transform 0.3s ease-in-out", // Smooth transition
                                             }}
                                             onClick={() => handleVideoClick(index)}
-                                            onTouchStart={(e) => handleTouchStart(e, index)}
-                                            onTouchMove={(e) => handleTouchMove(e, index)}
-                                            onTouchEnd={(e) => handleTouchEnd(e, index)}
                                         >
                                             <source src={post.video} type="video/mp4" />
                                             Your browser does not support the video tag.
                                         </video>
 
-                                        <Box position="absolute" top="10px" left="10px" display="flex" alignItems="center" color="white" fontSize="lg" fontWeight="bold" padding="5px" borderRadius="5px" zIndex="1">
+                                        <Box
+                                            position="absolute"
+                                            top="10px"
+                                            left="10px"
+                                            display="flex"
+                                            alignItems="center"
+                                            color="white"
+                                            fontSize="lg"
+                                            fontWeight="bold"
+                                            padding="5px"
+                                            borderRadius="5px"
+                                            zIndex="1"
+                                        >
                                             {post.postedBy ? (
                                                 <>
                                                     <Link to={`/${post.postedBy?.username}`}>
@@ -172,14 +189,35 @@ const VideoFeedPage = () => {
                                             )}
                                         </Box>
 
-                                        <Box position="absolute" bottom="10px" left="10px" color="white" fontSize="lg" fontWeight="bold" padding="5px" borderRadius="5px" width="90%" zIndex="1">
-                                            <Text fontSize="md" fontWeight="bold">Caption</Text>
+                                        <Box
+                                            position="absolute"
+                                            bottom="10px"
+                                            left="10px"
+                                            color="white"
+                                            fontSize="lg"
+                                            fontWeight="bold"
+                                            padding="5px"
+                                            borderRadius="5px"
+                                            width="90%"
+                                            zIndex="1"
+                                        >
+                                            <Text fontSize="md" fontWeight="bold">
+                                                Caption
+                                            </Text>
                                             <Text fontSize="sm" fontWeight="normal" color="gray.200">
                                                 {post.text || "No caption"}
                                             </Text>
                                         </Box>
 
-                                        <Box position="absolute" top={[200, 400]} right={0} display="flex" flexDirection="column" alignItems="center" zIndex={5}>
+                                        <Box
+                                            position="absolute"
+                                            top={[200, 400]}
+                                            right={0}
+                                            display="flex"
+                                            flexDirection="column"
+                                            alignItems="center"
+                                            zIndex={5}
+                                        >
                                             <VideoAction post={post} />
                                         </Box>
                                     </Box>
