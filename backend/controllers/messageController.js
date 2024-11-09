@@ -88,17 +88,21 @@ async function getMessages(req, res) {
 async function getConversations(req, res) {
 	const userId = req.user._id;
 	try {
-		const conversations = await Conversation.find({ participants: userId }).populate({
-			path: "participants",
-			select: "username profilePic",
-		});
+		// Find conversations involving the user and sort by the latest message timestamp
+		const conversations = await Conversation.find({ participants: userId })
+			.sort({ lastMessageAt: -1 }) // Sort by lastMessageAt in descending order
+			.populate({
+				path: "participants",
+				select: "username profilePic",
+			});
 
-		// remove the current user from the participants array
+		// Remove the current user from the participants array
 		conversations.forEach((conversation) => {
 			conversation.participants = conversation.participants.filter(
 				(participant) => participant._id.toString() !== userId.toString()
 			);
 		});
+		
 		res.status(200).json(conversations);
 	} catch (error) {
 		// Log the error for debugging purposes
@@ -107,5 +111,6 @@ async function getConversations(req, res) {
 		res.status(500).json({ error: "An error occurred while retrieving conversations." });
 	}
 }
+
 
 export { sendMessage, getMessages, getConversations };

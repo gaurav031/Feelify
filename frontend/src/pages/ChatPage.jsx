@@ -40,14 +40,14 @@ const ChatPage = () => {
 
   // Utility function to sort conversations by the most recent message
   const sortConversations = (convs) =>
-    convs.sort((a, b) => new Date(b.lastMessage.date) - new Date(a.lastMessage.date));
+    convs.sort((a, b) => new Date(b.lastMessage?.date) - new Date(a.lastMessage?.date));
 
   useEffect(() => {
     socket?.on("newMessage", (newMessage) => {
       setConversations((prev) => {
         const updatedConversations = [
           newMessage,
-          ...prev.filter((conversation) => conversation._id !== newMessage._id),
+          ...prev.filter((conversation) => conversation?._id !== newMessage?._id),
         ];
         messageSound.play();
         return sortConversations(updatedConversations);
@@ -60,17 +60,16 @@ const ChatPage = () => {
       try {
         const res = await fetch("/api/messages/conversations");
         const data = await res.json();
-        if (data.error) {
-          showToast("Error", data.error, "error");
+        if (!data || data.error) {
+          showToast("Error", data?.error || "Failed to fetch conversations", "error");
           return;
         }
-        // Add fallback for missing profilePic here
         const formattedData = data.map((conversation) => ({
           ...conversation,
-          participants: conversation.participants.map((participant) => ({
+          participants: conversation.participants?.map((participant) => ({
             ...participant,
             profilePic: participant.profilePic || "/default-avatar.png",
-          })),
+          })) || [],
         }));
         setConversations(sortConversations(formattedData));
       } catch (error) {
@@ -89,18 +88,18 @@ const ChatPage = () => {
     try {
       const res = await fetch(`/api/users/profile/${searchText}`);
       const searchedUser = await res.json();
-      if (searchedUser.error) {
-        showToast("Error", searchedUser.error, "error");
+      if (!searchedUser || searchedUser.error) {
+        showToast("Error", searchedUser?.error || "User not found", "error");
         return;
       }
 
-      if (searchedUser._id === currentUser._id) {
+      if (searchedUser._id === currentUser?._id) {
         showToast("Error", "You cannot message yourself", "error");
         return;
       }
 
       const conversationExists = conversations.find(
-        (conversation) => conversation.participants[0]._id === searchedUser._id
+        (conversation) => conversation.participants?.[0]?._id === searchedUser._id
       );
 
       if (conversationExists) {
@@ -140,10 +139,10 @@ const ChatPage = () => {
 
   const handleConversationClick = (conversation) => {
     setSelectedConversation({
-      _id: conversation._id,
-      userId: conversation.participants[0]?._id,
-      userProfilePic: conversation.participants[0]?.profilePic || "/default-avatar.png",
-      username: conversation.participants[0]?.username,
+      _id: conversation?._id,
+      userId: conversation.participants?.[0]?._id || null,
+      userProfilePic: conversation.participants?.[0]?.profilePic || "/default-avatar.png",
+      username: conversation.participants?.[0]?.username || "Unknown",
       mock: conversation.mock,
     });
     setShowConversations(false);
@@ -169,7 +168,7 @@ const ChatPage = () => {
       boxShadow="2xl"
       height={700}
     >
-      <Flex alignItems="center" justifyContent="space-between" mb={4} >
+      <Flex alignItems="center" justifyContent="space-between" mb={4}>
         <>
           <IconButton
             aria-label="Back to conversations"
@@ -177,9 +176,9 @@ const ChatPage = () => {
             onClick={handleBackClick}
             variant="ghost"
           />
-          <Avatar size="sm" name={currentUser.name} src={currentUser?.profilePic || "/default-avatar.png"} ml={-10}/>
+          <Avatar size="sm" name={currentUser?.name} src={currentUser?.profilePic || "/default-avatar.png"} ml={-10} />
           <Text fontWeight={500} fontSize="md" ml={-1}>
-            {currentUser.username}
+            {currentUser?.username}
           </Text>
         </>
         <Flex alignItems="center" gap={2}>
@@ -196,69 +195,50 @@ const ChatPage = () => {
       </Flex>
 
       <Flex gap={4} flexDirection={{ base: "column", md: "row" }}>
-    {showConversations && (
-        <Box
-            flex={30}
-            borderRadius="lg"
-            p={4}
-            boxShadow="base"
-            overflowY="auto"
-            maxH="400px"
-            height={7000}
-        >
+        {showConversations && (
+          <Box flex={30} borderRadius="lg" p={4} boxShadow="base" overflowY="auto" maxH="400px">
             <Text fontWeight={700} fontSize="lg" mb={4} color={useColorModeValue("gray.600", "gray.300")}>
-                Your Conversations
+              Your Conversations
             </Text>
             {loadingConversations
-                ? Array(5)
-                    .fill("")
-                    .map((_, i) => (
-                        <Flex key={i} gap={4} alignItems="center" p={2} borderRadius="md" _hover={{ bg: "gray.100" }}>
-                            <SkeletonCircle size="10" />
-                            <Box flex="1">
-                                <Skeleton height="10px" mb={2} />
-                                <Skeleton height="8px" />
-                            </Box>
-                        </Flex>
-                    ))
-                : conversations.map((conversation, index) => (
-                    <Box key={conversation._id}>
-                        <Flex
-                            alignItems="center"
-                            p={3}
-                            borderRadius="md"
-                            bg={useColorModeValue("white", "gray.800")}
-                            boxShadow="sm"
-                            _hover={{ bg: useColorModeValue("gray.100", "gray.600"), cursor: "pointer" }}
-                            onClick={() => handleConversationClick(conversation)}
-                        >
-                            <Image
-                                src={conversation.participants[0]?.profilePic || "/default-avatar.png"}
-                                borderRadius="full"
-                                boxSize="40px"
-                                objectFit="cover"
-                                fallbackSrc="/default-avatar.png"
-                            />
-                            <Box ml={3}>
-                                <Text fontWeight={700}>{conversation.participants[0]?.username || "Unknown"}</Text>
-                                <Text fontSize="sm" color={useColorModeValue("gray.500", "gray.400")}>
-                                    {conversation.lastMessage.text || "No messages yet"}
-                                </Text>
-                            </Box>
-                            {onlineUsers.includes(conversation.participants[0]?._id) && (
-                                <Box
-                                    bg="green.400"
-                                    borderRadius="full"
-                                    boxSize={3}
-                                    ml={2}
-                                    border="2px solid white"
-                                />
-                            )}
-                        </Flex>
-                        {index < conversations.length - 1 && <Divider my={2} />}
-                    </Box>
+              ? Array(5)
+                  .fill("")
+                  .map((_, i) => (
+                    <Flex key={i} gap={4} alignItems="center" p={2}>
+                      <SkeletonCircle size="10" />
+                      <Box flex="1">
+                        <Skeleton height="10px" mb={2} />
+                        <Skeleton height="8px" />
+                      </Box>
+                    </Flex>
+                  ))
+              : conversations.map((conversation, index) => (
+                  <Box key={conversation?._id}>
+                    <Flex
+                      alignItems="center"
+                      p={3}
+                      borderRadius="md"
+                      bg={useColorModeValue("white", "gray.800")}
+                      _hover={{ bg: useColorModeValue("gray.100", "gray.600"), cursor: "pointer" }}
+                      onClick={() => handleConversationClick(conversation)}
+                    >
+                      <Image
+                        src={conversation.participants?.[0]?.profilePic || "/default-avatar.png"}
+                        borderRadius="full"
+                        boxSize="40px"
+                        objectFit="cover"
+                      />
+                      <Box ml={3}>
+                        <Text fontWeight={700}>{conversation.participants?.[0]?.username || "Unknown"}</Text>
+                        <Text fontSize="sm" color={useColorModeValue("gray.500", "gray.400")}>
+                          {conversation.lastMessage?.text || "No messages yet"}
+                        </Text>
+                      </Box>
+                    </Flex>
+                    {index < conversations.length - 1 && <Divider my={2} />}
+                  </Box>
                 ))}
-        </Box>
+          </Box>
         )}
         {!showConversations && selectedConversation?._id && (
           <MessageContainer
