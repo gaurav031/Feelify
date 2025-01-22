@@ -169,18 +169,36 @@ const ChatPage = () => {
       height={700}
     >
       <Flex alignItems="center" justifyContent="space-between" mb={4}>
-        <>
+        <Flex
+          align="center"
+          justify="space-between"
+          px={{ base: 1, md: 1 }}
+          py={2}
+          gap={{ base: 0, md: 2 }}
+        >
           <IconButton
             aria-label="Back to conversations"
             icon={<ArrowBackIcon />}
             onClick={handleBackClick}
             variant="ghost"
           />
-          <Avatar size="sm" name={currentUser?.name} src={currentUser?.profilePic || "/default-avatar.png"} ml={-10} />
-          <Text fontWeight={500} fontSize="md" ml={-1}>
-            {currentUser?.username}
-          </Text>
-        </>
+
+          <Flex align="center" gap={{ base: 3, md: 4 }}>
+            <Avatar
+              size="sm"
+              name={currentUser?.name}
+              src={currentUser?.profilePic || "/default-avatar.png"}
+            />
+            <Text
+              fontWeight={500}
+              fontSize={{ base: "sm", md: "md" }}
+              noOfLines={1}
+            >
+              {currentUser?.username}
+            </Text>
+          </Flex>
+        </Flex>
+
         <Flex alignItems="center" gap={2}>
           <Input
             width={130}
@@ -202,42 +220,42 @@ const ChatPage = () => {
             </Text>
             {loadingConversations
               ? Array(5)
-                  .fill("")
-                  .map((_, i) => (
-                    <Flex key={i} gap={4} alignItems="center" p={2}>
-                      <SkeletonCircle size="10" />
-                      <Box flex="1">
-                        <Skeleton height="10px" mb={2} />
-                        <Skeleton height="8px" />
-                      </Box>
-                    </Flex>
-                  ))
+                .fill("")
+                .map((_, i) => (
+                  <Flex key={i} gap={4} alignItems="center" p={2}>
+                    <SkeletonCircle size="10" />
+                    <Box flex="1">
+                      <Skeleton height="10px" mb={2} />
+                      <Skeleton height="8px" />
+                    </Box>
+                  </Flex>
+                ))
               : conversations.map((conversation, index) => (
-                  <Box key={conversation?._id}>
-                    <Flex
-                      alignItems="center"
-                      p={3}
-                      borderRadius="md"
-                      bg={useColorModeValue("white", "gray.800")}
-                      _hover={{ bg: useColorModeValue("gray.100", "gray.600"), cursor: "pointer" }}
-                      onClick={() => handleConversationClick(conversation)}
-                    >
-                      <Image
-                        src={conversation.participants?.[0]?.profilePic || "/default-avatar.png"}
-                        borderRadius="full"
-                        boxSize="40px"
-                        objectFit="cover"
-                      />
-                      <Box ml={3}>
-                        <Text fontWeight={700}>{conversation.participants?.[0]?.username || "Unknown"}</Text>
-                        <Text fontSize="sm" color={useColorModeValue("gray.500", "gray.400")}>
-                          {conversation.lastMessage?.text || "No messages yet"}
-                        </Text>
-                      </Box>
-                    </Flex>
-                    {index < conversations.length - 1 && <Divider my={2} />}
-                  </Box>
-                ))}
+                <Box key={conversation?._id}>
+                  <Flex
+                    alignItems="center"
+                    p={3}
+                    borderRadius="md"
+                    bg={useColorModeValue("white", "gray.800")}
+                    _hover={{ bg: useColorModeValue("gray.100", "gray.600"), cursor: "pointer" }}
+                    onClick={() => handleConversationClick(conversation)}
+                  >
+                    <Image
+                      src={conversation.participants?.[0]?.profilePic || "/default-avatar.png"}
+                      borderRadius="full"
+                      boxSize="40px"
+                      objectFit="cover"
+                    />
+                    <Box ml={3}>
+                      <Text fontWeight={700}>{conversation.participants?.[0]?.username || "Unknown"}</Text>
+                      <Text fontSize="sm" color={useColorModeValue("gray.500", "gray.400")}>
+                        {conversation.lastMessage?.text || "No messages yet"}
+                      </Text>
+                    </Box>
+                  </Flex>
+                  {index < conversations.length - 1 && <Divider my={2} />}
+                </Box>
+              ))}
           </Box>
         )}
         {!showConversations && selectedConversation?._id && (

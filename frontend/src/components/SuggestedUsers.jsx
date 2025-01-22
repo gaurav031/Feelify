@@ -32,9 +32,7 @@ const SuggestedUsers = () => {
 
   return (
     <>
-      <Text mb={4} fontWeight={"bold"} mt={4}>
-        Suggested Users
-      </Text>
+     
       <Flex direction={"column"} gap={4}>
         {!loading && Array.isArray(suggestedUsers) && suggestedUsers.length > 0 ? (
           suggestedUsers.map((user) => <SuggestedUser key={user._id} user={user} />)
