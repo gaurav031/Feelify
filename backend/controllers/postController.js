@@ -1,7 +1,8 @@
 import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
-import User from "../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
+import User from "../models/userModel.js";
+
 
 const createPost = async (req, res) => {
     try {
@@ -48,7 +49,7 @@ const createPost = async (req, res) => {
         console.log(err);
     }
 };
-
+    
 
 const getPost = async (req, res) => {
     try {
@@ -217,6 +218,7 @@ const replyToPost = async (req, res) => {
     }
 };
 
+
 const getFeedPosts = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -280,6 +282,37 @@ const searchPosts = async (req, res) => {
     }
 };
 
+const repostPost = async (req, res) => {
+    try {
+        const { postId } = req.body;
+        const userId = req.user._id;
+
+        if (!postId) {
+            return res.status(400).json({ error: "Post ID is required" });
+        }
+
+        const originalPost = await Post.findById(postId);
+        if (!originalPost) {
+            return res.status(404).json({ error: "Original post not found" });
+        }
+
+        const newRepost = new Post({
+            postedBy: userId,
+            text: originalPost.text,
+            img: originalPost.img,
+            video: originalPost.video,
+            repostOf: originalPost._id,
+        });
+
+        await newRepost.save();
+
+        const populatedPost = await Post.findById(newRepost._id).populate("postedBy", "name avatar"); // Ensure proper model reference
+        res.status(201).json(populatedPost);
+    } catch (err) {
+        console.error("Error in repostPost:", err);
+        res.status(500).json({ error: "An error occurred while reposting" });
+    }
+};
 
 
-export { createPost, getPost, deletePost, likeUnlikePost, replyToPost, getFeedPosts, getUserPosts, searchPosts };
+export { repostPost, createPost, getPost, deletePost, likeUnlikePost, replyToPost, getFeedPosts, getUserPosts, searchPosts };

@@ -21,6 +21,7 @@ Feature List:
 -   👥 Follow/Unfollow Users
 -   ❄️ Freeze Your Account
 -   🌓 Dark/Light Mode
+-   📢 Repost Any Post
 -   📱 Completely Responsive
 -   💬 Chat App With Image Support
 -   👀 Seen/Unseen Status for Messages

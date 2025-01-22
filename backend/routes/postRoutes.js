@@ -9,6 +9,7 @@ import {
 	getFeedPosts,
 	getUserPosts,
 	searchPosts,
+	repostPost,
 } from "../controllers/postController.js";
 import protectRoute from "../middlewares/protectRoute.js";
 
@@ -25,5 +26,5 @@ router.delete("/:id", protectRoute, deletePost);
 router.put("/like/:id", protectRoute, likeUnlikePost);
 router.put("/reply/:id", protectRoute, replyToPost);
 router.get("/search", protectRoute, searchPosts); // Add this line for search
-
+router.post("/repost",protectRoute, repostPost);
 export default router;
