@@ -11,44 +11,48 @@ const useFollowUnfollow = (user) => {
     const [updating, setUpdating] = useState(false);
     const showToast = useShowToast();
 
-    if (!user) {
-        console.error("User object is undefined");
+    if (!user || !user._id) {
+        console.error("Invalid user object provided to useFollowUnfollow hook.");
         return { handleFollowUnfollow: () => {}, updating: false, following: false };
     }
 
     const handleFollowUnfollow = async () => {
-        if (!currentUser) {
-            showToast("Error", "Please login to follow", "error");
+        if (!currentUser || !currentUser._id) {
+            showToast("Error", "Please log in to follow or unfollow users.", "error");
             return;
         }
+
         if (updating) return;
 
         setUpdating(true);
+        const isFollowing = following;
+
         try {
             const res = await fetch(`/api/users/follow/${user._id}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
+                body: JSON.stringify({ action: isFollowing ? "unfollow" : "follow" }),
             });
-            const data = await res.json();
-            if (data.error) {
-                showToast("Error", data.error, "error");
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                showToast("Error", errorData?.message || "Failed to update follow status.", "error");
                 return;
             }
 
-            if (following) {
-                showToast("Success", `Unfollowed ${user.name}`, "success");
-                user.followers.pop(); // simulate removing from followers
-            } else {
-                showToast("Success", `Followed ${user.name}`, "success");
-                user.followers.push(currentUser?._id); // simulate adding to followers
-            }
-            setFollowing(!following);
+            const data = await res.json();
 
-            console.log(data);
+            if (data.success) {
+                setFollowing(!isFollowing);
+                showToast("Success", `${isFollowing ? "Unfollowed" : "Followed"} ${user.name}`, "success");
+            } else {
+                showToast("Error", data.message || "An error occurred.", "error");
+            }
         } catch (error) {
-            showToast("Error", error.message, "error");
+            console.error("Error in handleFollowUnfollow:", error);
+            showToast("Error", "Something went wrong. Please try again.", "error");
         } finally {
             setUpdating(false);
         }
