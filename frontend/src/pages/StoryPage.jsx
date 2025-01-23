@@ -23,7 +23,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '@chakra-ui/react';
 
-const StoryPage = ({ currentUserId, loggedInUser  }) => {
+const StoryPage = ({ currentUserId, loggedInUser }) => {
     const navigate = useNavigate();
     const [groupedStories, setGroupedStories] = useState([]);  // Holds grouped stories
     const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ const StoryPage = ({ currentUserId, loggedInUser  }) => {
     useEffect(() => {
         fetchStories();
     }, []);
-    
+
     // Fetch stories from the server
     const fetchStories = async () => {
         setLoading(true);
@@ -63,8 +63,8 @@ const StoryPage = ({ currentUserId, loggedInUser  }) => {
             const storiesArray = Object.values(grouped);
 
             // Separate own story and other users' stories
-            const ownStory = storiesArray.find((group) => group.user._id === loggedInUser ?._id);
-            const otherUsersStories = storiesArray.filter((group) => group.user._id !== loggedInUser ?._id);
+            const ownStory = storiesArray.find((group) => group.user._id === loggedInUser?._id);
+            const otherUsersStories = storiesArray.filter((group) => group.user._id !== loggedInUser?._id);
 
             // If there are other users' stories, place the own story at the start
             const orderedStories = ownStory ? [ownStory, ...otherUsersStories] : otherUsersStories;
@@ -126,7 +126,7 @@ const StoryPage = ({ currentUserId, loggedInUser  }) => {
             await axios.post('/api/stories/create', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
- },
+                },
             });
             toast({
                 title: 'Story uploaded successfully!',
@@ -169,7 +169,7 @@ const StoryPage = ({ currentUserId, loggedInUser  }) => {
                         top="14%"  // Adjust position as needed
                     />
                     <Text fontSize="sm" textAlign="center" fontWeight="bold" mt={5} ml={5}>
-                        Share Feeling 
+                        Share Feeling
                     </Text>
                 </Box>
 
@@ -203,54 +203,122 @@ const StoryPage = ({ currentUserId, loggedInUser  }) => {
                 )}
 
                 {/* Upload Story Modal */}
-                <Modal isOpen={isUploadOpen} onClose={onUploadClose} size="md" isCentered >
+                <Modal isOpen={isUploadOpen} onClose={onUploadClose} size="md" isCentered>
                     <ModalOverlay />
-                    <ModalContent background={colorMode === 'dark' ? "blackAlpha.900" : 'white'}> 
+                    <ModalContent
+                        background={colorMode === 'dark' ? 'gray.800' : 'white'}
+                        boxShadow="2xl"
+                        borderRadius="lg"
+                        p={4}
+                        transform="scale(1.05)"
+                    >
                         <ModalCloseButton />
                         <ModalBody>
-                            <Text mb={4}>Upload a Story</Text>
-                            <Input
-                                type="file"
-                                onChange={handleFileChange}
-                                accept="image/*,video/*"
-                                mb={3}
-                            />
-                            {/* Show Preview of the Selected File */}
+                            <Text
+                                mb={4}
+                                fontSize="xl"
+                                fontWeight="bold"
+                                textAlign="center"
+                                color={colorMode === 'dark' ? 'teal.200' : 'teal.600'}
+                            >
+                                Upload a Feeling
+                            </Text>
+
+                            <Flex
+                                direction="column"
+                                alignItems="center"
+                                border="2px dashed"
+                                borderColor={colorMode === 'dark' ? 'teal.500' : 'teal.300'}
+                                borderRadius="lg"
+                                p={4}
+                                bgGradient={
+                                    colorMode === 'dark'
+                                        ? 'linear(to-br, gray.900, teal.800)'
+                                        : 'linear(to-br, teal.100, teal.300)'
+                                }
+                                _hover={{
+                                    borderColor: colorMode === 'dark' ? 'teal.200' : 'teal.500',
+                                }}
+                            >
+                                <Input
+                                    type="file"
+                                    onChange={handleFileChange}
+                                    accept="image/*,video/*"
+                                    mb={3}
+                                    border="none"
+                                    _focus={{ outline: 'none' }}
+                                    cursor="pointer"
+                                />
+                                <Text fontSize="sm" color="gray.500">
+                                    Drag & drop a file or click to select
+                                </Text>
+                            </Flex>
+
+                            {/* File Preview */}
                             {filePreview && (
-                                <Box mt={3} textAlign="center">
+                                <Box mt={4} textAlign="center" borderRadius="lg" overflow="hidden">
                                     {mediaType === 'image' ? (
-                                        <Image src={filePreview} alt="Preview" maxW="100%" />
-                                    ) : mediaType === 'video' ? (
-                                        <video width="100%" controls>
-                                            <source src={filePreview} type={file.type} />
+                                        <Image
+                                            src={filePreview}
+                                            alt="Preview"
+                                            maxW="100%"
+                                            borderRadius="lg"
+                                            boxShadow="lg"
+                                        />
+                                    ) : (
+                                        <video width="100%" controls style={{ borderRadius: '10px' }}>
+                                            <source src={filePreview} type={file?.type} />
                                         </video>
-                                    ) : null}
+                                    )}
                                 </Box>
                             )}
-                            {/* Select Media Type (Image or Video) */}
-                            <Flex mt={3}>
+
+                            {/* Media Type Selection */}
+                            <Flex mt={6} justifyContent="center" gap={4}>
                                 <Button
                                     onClick={() => setMediaType('image')}
-                                    colorScheme={mediaType === 'image' ? 'blue' : 'gray'}
+                                    colorScheme={mediaType === 'image' ? 'teal' : 'gray'}
+                                    variant={mediaType === 'image' ? 'solid' : 'outline'}
+                                    _hover={{
+                                        bg: mediaType === 'image' ? 'teal.400' : 'gray.100',
+                                    }}
                                 >
                                     Image
                                 </Button>
                                 <Button
                                     onClick={() => setMediaType('video')}
-                                    colorScheme={mediaType === 'video' ? 'blue' : 'gray'}
-                                    ml={2}
+                                    colorScheme={mediaType === 'video' ? 'teal' : 'gray'}
+                                    variant={mediaType === 'video' ? 'solid' : 'outline'}
+                                    _hover={{
+                                        bg: mediaType === 'video' ? 'teal.400' : 'gray.100',
+                                    }}
                                 >
                                     Video
                                 </Button>
                             </Flex>
                         </ModalBody>
+
                         <ModalFooter>
-                            <Button colorScheme="blue" onClick={handleUpload} isLoading={uploading}>
+                            <Button
+                                colorScheme="teal"
+                                onClick={handleUpload}
+                                isLoading={uploading}
+                                px={6}
+                                _hover={{
+                                    bg: 'teal.400',
+                                    transform: 'scale(1.05)',
+                                }}
+                                _active={{
+                                    transform: 'scale(0.95)',
+                                }}
+                                borderRadius="lg"
+                            >
                                 Upload
                             </Button>
                         </ModalFooter>
                     </ModalContent>
                 </Modal>
+
             </Flex>
         </Box>
     );

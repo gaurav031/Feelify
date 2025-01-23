@@ -1,26 +1,126 @@
+/* Icon Container */
 .icon-container {
-	border-radius: 50%;
-	padding: 8px;
-	width: 40px;
-	height: 40px;
-	transition: background-color 0.3s ease-in-out;
+    border-radius: 50%;
+    padding: 10px;
+    width: 50px;
+    height: 50px;
+    transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.icon-container:hover {
-	background-color: #1e1e1e;
+/* Hover Effects for Different Icons */
+.icon-container:hover:nth-child(1) {
+    background-color: #ff9ff3;
+    transform: scale(1.2) rotate(10deg);
 }
 
+.icon-container:hover:nth-child(2) {
+    background-color: #48dbfb;
+    transform: scale(1.2) rotate(-10deg);
+}
+
+.icon-container:hover:nth-child(3) {
+    background-color: #feca57;
+    transform: scale(1.2) rotate(15deg);
+}
+
+.icon-container:hover:nth-child(4) {
+    background-color: #1dd1a1;
+    transform: scale(1.2) rotate(-15deg);
+}
+
+.icon-container i {
+    color: white;
+    font-size: 24px;
+    transition: transform 0.3s ease-in-out;
+}
+
+.icon-container:hover i {
+    transform: rotate(360deg);
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
-	width: 7px;
+    width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-	background-color: #1e1e1e;
+    background: linear-gradient(45deg, #2c3e50, #8e44ad);
 }
 
 ::-webkit-scrollbar-thumb {
-	background-color: #888;
+    background: linear-gradient(45deg, #f39c12, #e74c3c);
+    border-radius: 10px;
 }
-::-webkit-scrollbar-thumb {
-	background-color: #555;
+
+/* Feelify Logo */
+.feelify-logo {
+    font-size: 2.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    background: linear-gradient(to right, #ff9ff3, #48dbfb, #feca57, #1dd1a1);
+    background-size: 200%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: gradient-animation 3s infinite, bounce 2s infinite;
+}
+
+@keyframes gradient-animation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Background Effects */
+body {
+    background: linear-gradient(120deg, #1e272e, #0abde3, #feca57);
+    background-size: 300% 300%;
+    animation: background-animation 8s infinite;
+    color: white;
+}
+
+@keyframes background-animation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Light Mode Overrides */
+body.light-mode {
+    background: linear-gradient(120deg, #ffffff, #ff9ff3, #48dbfb);
+    color: #2d3436;
+}
+
+.light-mode .icon-container:hover {
+    background-color: #ffeaa7;
+}
+
+.light-mode .feelify-logo {
+    background: linear-gradient(to right, #ff7675, #74b9ff, #81ecec);
+    animation: gradient-animation 3s infinite;
 }

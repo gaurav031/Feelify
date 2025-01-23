@@ -71,7 +71,7 @@ const PostPage = () => {
 
 	return (
 		<>
-			<Flex>
+			<Flex mt={5}>
 				<Flex w={"full"} alignItems={"center"} gap={3}>
 					<Avatar src={user.profilePic} size={"md"} name={user.username} />
 					<Flex>

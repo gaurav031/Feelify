@@ -21,6 +21,7 @@ import { useRef, useState, useEffect } from "react";
 import usePreviewImg from "../hooks/usePreviewImg";
 import { BsFillImageFill } from "react-icons/bs";
 import { IoMdVideocam } from "react-icons/io";
+import { FaLaughSquint } from "react-icons/fa";
 import { useRecoilState, useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import useShowToast from "../hooks/useShowToast";
@@ -123,88 +124,105 @@ const CreatePost = ({ isOpen, onClose }) => {
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <ModalOverlay />
-            <ModalContent mx={4} my={6} maxW="lg" borderRadius="md" boxShadow="lg"  background={colorMode === 'dark' ? "blackAlpha.900" : 'white'}>
-                <ModalHeader textAlign="center" fontWeight="bold" fontSize="lg">Create Post</ModalHeader>
+            <ModalContent mx={4} my={6} maxW="lg" borderRadius="xl" boxShadow="2xl" background={colorMode === 'dark' ? "blackAlpha.900" : 'green.200'} style={{ backgroundImage: colorMode === 'dark' ? "url('/images/dark-funky-bg.jpg')" : "url('/images/light-funky-bg.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                <ModalHeader textAlign="center" fontWeight="extrabold" fontSize="2xl" fontStyle="italic" color={colorMode === 'dark' ? 'yellow.400' : 'purple.800'}>
+                    Let's Create Some Magic! 🌟
+                </ModalHeader>
                 <ModalCloseButton />
                 <ModalBody pb={6} display="flex" flexDirection="column" alignItems="center">
-                    <FormControl w="100%">
+                    <FormControl w="100%" borderColor={colorMode === 'dark' ? 'yellow.500' : 'purple.400'} borderWidth="2px" borderRadius="md" p={4} boxShadow="lg">
                         <Textarea
-                            placeholder="What's on your mind?"
+                            placeholder="Share your thoughts, jokes, or secret recipes! 🥳"
                             onChange={handleTextChange}
                             value={postText}
                             resize="none"
                             minHeight="120px"
                             maxHeight="200px"
-                            borderColor={useColorModeValue("gray.300", "gray.600")}
-                            _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px rgba(66, 153, 225, 0.6)" }}
+                            borderColor={colorMode === 'dark' ? "yellow.300" : "purple.300"}
+                            fontFamily="Comic Sans MS, cursive"
+                            _focus={{ borderColor: "teal.400", boxShadow: "0 0 0 1px teal" }}
                         />
-                        <Text fontSize="xs" fontWeight="bold" textAlign="right" mt={1} color="gray.800">
-                            {remainingChar}/{MAX_CHAR}
+                        <Text fontSize="xs" fontWeight="extrabold" textAlign="right" mt={1} color={colorMode === 'dark' ? 'yellow.200' : 'purple.700'}>
+                            {remainingChar}/{MAX_CHAR} characters remaining. Go wild! 🎉
                         </Text>
 
-                        <Flex alignItems="center" mt={2}>
+                        <Flex alignItems="center" mt={4} gap={4}>
                             <Input type="file" hidden ref={imageRef} onChange={handleImageChange} />
                             <BsFillImageFill
-                                style={{ marginRight: "10px", cursor: "pointer" }}
-                                size={24}
+                                style={{ cursor: "pointer" }}
+                                size={28}
                                 onClick={() => imageRef.current.click()}
-                                color={useColorModeValue("blue.500", "blue.300")}
+                                color={colorMode === 'dark' ? "orange.300" : "blue.500"}
                                 title="Upload Image"
+                                onMouseEnter={(e) => e.target.style.transform = "scale(1.2)"}
+                                onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
                             />
                             <Input type="file" hidden ref={videoRef} onChange={handleVideoChange} />
                             <IoMdVideocam
                                 style={{ cursor: "pointer" }}
-                                size={24}
+                                size={28}
                                 onClick={() => videoRef.current.click()}
-                                color={useColorModeValue("blue.500", "blue.300")}
+                                color={colorMode === 'dark' ? "pink.400" : "green.400"}
                                 title="Upload Video"
+                                onMouseEnter={(e) => e.target.style.transform = "scale(1.2)"}
+                                onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+                            />
+                            <FaLaughSquint
+                                size={28}
+                                color={colorMode === 'dark' ? "cyan.400" : "orange.400"}
+                                style={{ cursor: "pointer" }}
+                                title="Make me laugh!"
+                                onMouseEnter={(e) => e.target.style.transform = "scale(1.2)"}
+                                onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
                             />
                         </Flex>
 
                         {imgUrl && (
                             <Flex mt={5} w="full" justifyContent="center" position="relative">
-                                <Image src={imgUrl} alt="Selected" borderRadius="md" maxH="200px" boxShadow="md" />
+                                <Image src={imgUrl} alt="Selected" borderRadius="lg" maxH="200px" boxShadow="xl" />
                                 <CloseButton
                                     onClick={() => {
                                         setImgUrl("");
                                     }}
-                                    bg="gray.800"
+                                    bg="red.500"
                                     color="white"
                                     position="absolute"
                                     top={2}
                                     right={2}
+                                    boxShadow="lg"
                                 />
                             </Flex>
                         )}
 
                         {videoUrl && (
                             <Flex mt={5} w="full" justifyContent="center" position="relative">
-                                <video src={videoUrl} alt="Selected" borderRadius="md" maxH="200px" controls />
+                                <video src={videoUrl} alt="Selected" borderRadius="lg" maxH="200px" controls style={{ border: `3px dashed ${colorMode === 'dark' ? 'yellow.400' : 'purple.400'}` }} />
                                 <CloseButton
                                     onClick={() => {
                                         setVideoUrl("");
                                     }}
-                                    bg="gray.800"
+                                    bg="red.500"
                                     color="white"
                                     position="absolute"
                                     top={2}
                                     right={2}
+                                    boxShadow="lg"
                                 />
                             </Flex>
                         )}
 
                         {loading ? (
                             <Flex justifyContent="center" mt={5}>
-                                <Spinner size="lg" />
-                                <Text ml={2}>Uploading...</Text>
+                                <Spinner size="lg" color={colorMode === 'dark' ? 'yellow.300' : 'purple.500'} />
+                                <Text ml={2} fontStyle="italic" color={colorMode === 'dark' ? 'yellow.200' : 'purple.600'}>Uploading... Hold tight! 🚀</Text>
                             </Flex>
                         ) : success ? (
-                            <Text fontSize="lg" fontWeight="bold" color="green.500" textAlign="center" mt={5}>
-                                Post created successfully!
+                            <Text fontSize="lg" fontWeight="extrabold" color={colorMode === 'dark' ? "green.400" : "pink.500"} textAlign="center" mt={5}>
+                                🎉 Post created successfully! You're awesome! 🎉
                             </Text>
                         ) : (
-                            <Button colorScheme="blue" mr={3} mt={10} onClick={handleCreatePost} isFullWidth>
-                                Post
+                            <Button colorScheme={colorMode === 'dark' ? "yellow" : "pink"} mr={3} mt={10} onClick={handleCreatePost} isFullWidth>
+                                🚀 Let's Go!
                             </Button>
                         )}
                     </FormControl>
