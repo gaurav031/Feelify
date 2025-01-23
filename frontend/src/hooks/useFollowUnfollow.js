@@ -4,61 +4,52 @@ import userAtom from "../atoms/userAtom";
 import { useRecoilValue } from "recoil";
 
 const useFollowUnfollow = (user) => {
-    const currentUser = useRecoilValue(userAtom);
+	const currentUser = useRecoilValue(userAtom);
     const [following, setFollowing] = useState(
         Array.isArray(user?.followers) && user.followers.includes(currentUser?._id)
     );
-    const [updating, setUpdating] = useState(false);
-    const showToast = useShowToast();
+        const [updating, setUpdating] = useState(false);
+	const showToast = useShowToast();
 
-    if (!user || !user._id) {
-        console.error("Invalid user object provided to useFollowUnfollow hook.");
-        return { handleFollowUnfollow: () => {}, updating: false, following: false };
-    }
+	const handleFollowUnfollow = async () => {
+		if (!currentUser) {
+			showToast("Error", "Please login to follow", "error");
+			return;
+		}
+		if (updating) return;
 
-    const handleFollowUnfollow = async () => {
-        if (!currentUser || !currentUser._id) {
-            showToast("Error", "Please log in to follow or unfollow users.", "error");
-            return;
-        }
+		setUpdating(true);
+		try {
+			const res = await fetch(`/api/users/follow/${user._id}`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			const data = await res.json();
+			if (data.error) {
+				showToast("Error", data.error, "error");
+				return;
+			}
 
-        if (updating) return;
+			if (following) {
+				showToast("Success", `Unfollowed ${user.name}`, "success");
+				user.followers.pop(); // simulate removing from followers
+			} else {
+				showToast("Success", `Followed ${user.name}`, "success");
+				user.followers.push(currentUser?._id); // simulate adding to followers
+			}
+			setFollowing(!following);
 
-        setUpdating(true);
-        const isFollowing = following;
+			console.log(data);
+		} catch (error) {
+			showToast("Error", error, "error");
+		} finally {
+			setUpdating(false);
+		}
+	};
 
-        try {
-            const res = await fetch(`/api/users/follow/${user._id}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ action: isFollowing ? "unfollow" : "follow" }),
-            });
-
-            if (!res.ok) {
-                const errorData = await res.json();
-                showToast("Error", errorData?.message || "Failed to update follow status.", "error");
-                return;
-            }
-
-            const data = await res.json();
-
-            if (data.success) {
-                setFollowing(!isFollowing);
-                showToast("Success", `${isFollowing ? "Unfollowed" : "Followed"} ${user.name}`, "success");
-            } else {
-                showToast("Error", data.message || "An error occurred.", "error");
-            }
-        } catch (error) {
-            console.error("Error in handleFollowUnfollow:", error);
-            showToast("Error", "Something went wrong. Please try again.", "error");
-        } finally {
-            setUpdating(false);
-        }
-    };
-
-    return { handleFollowUnfollow, updating, following };
+	return { handleFollowUnfollow, updating, following };
 };
 
 export default useFollowUnfollow;
