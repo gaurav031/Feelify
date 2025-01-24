@@ -41,13 +41,11 @@ const HomePage = () => {
   }, [showToast, setPosts]);
 
   return (
-    <Box  color={textColor} minHeight="100vh" p={5} animation={`${fadeIn} 0.5s ease-in-out`}>
+    <Box  color={textColor} minHeight="100vh"  animation={`${fadeIn} 0.5s ease-in-out`}>
       <Box >
         <StoryPage />
       </Box>
       <Flex
-        gap={5}
-       
         alignItems="flex-start"
         direction={{ base: "column", md: "row" }}
         animation={`${fadeIn} 1s ease-in-out`}

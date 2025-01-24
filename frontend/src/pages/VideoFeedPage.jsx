@@ -7,6 +7,7 @@ import {
   Avatar,
   Skeleton,
   useColorMode,
+  Button,
 } from "@chakra-ui/react";
 import axios from "axios";
 import VideoAction from "../components/VideoAction";
@@ -48,7 +49,7 @@ const VideoFeedPage = () => {
     const container = containerRef.current;
     if (
       container.scrollHeight - container.scrollTop <=
-        container.clientHeight + 50 &&
+      container.clientHeight + 50 &&
       !loading &&
       hasMore
     ) {
@@ -120,6 +121,7 @@ const VideoFeedPage = () => {
           width="100%"
           height="100vh"
           overflowY="auto"
+          mt={{ base: 0, md: 20 }}
           justifyContent="flex-start"
           alignItems="center"
           padding="0"
@@ -127,8 +129,36 @@ const VideoFeedPage = () => {
             scrollSnapType: "y mandatory",
           }}
         >
+          {/* Buttons at the top */}
+          <Box
+            position="absolute"
+            top="10px"
+            mt={5}
+            display="flex"
+            justifyContent="center"
+            gap="10px"
+            zIndex="2"
+            width="100%"
+          >
+            {["Funny", "Education", "Lust", "Poetry"].map((label) => (
+              <Button
+                key={label}
+                size="sm"
+                colorScheme={colorMode === "dark" ? "teal" : "pink"}
+                variant="solid"
+                borderRadius="8px"
+                _hover={{
+                  transform: "scale(1.05)",
+                  transition: "0.2s",
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+          </Box>
+
           {loading && posts.length === 0 ? (
-            Array.from({ length: 5 }).map((_, index) => (
+            Array.from({ length: 1 }).map((_, index) => (
               <Skeleton
                 key={index}
                 height="100vh"
@@ -141,7 +171,6 @@ const VideoFeedPage = () => {
               post.video && (
                 <Box
                   key={post._id}
-                  height="90vh"
                   position="relative"
                   display="flex"
                   justifyContent="center"
@@ -150,20 +179,31 @@ const VideoFeedPage = () => {
                   css={{
                     scrollSnapAlign: "start",
                   }}
-                  background={
-                    colorMode === "dark" ? "gray.800" : "gray.200"
-                  }
+                  sx={{
+                    height: "80vh", // Default height for larger screens
+                    background: colorMode === "dark" ? "gray.800" : "grey.200",
+                    "@media (max-width: 768px)": {
+                      height: "auto", // Allow the aspect ratio to define the height
+                      width: "100%", // Full width for mobile
+                      paddingTop: "16.25%", // 9:16 aspect ratio (100% * 9/16)
+                      position: "relative",
+                    },
+                  }}
                 >
                   <Box
                     position="relative"
                     width="100%"
                     height="100%"
-                   
                     display="flex"
+                    background="black "
+                    aspectRatio="9 / 16"
                     justifyContent="center"
                     alignItems="center"
                     border="8px solid transparent"
                     borderRadius="16px"
+                    style={{
+                      overflow: "hidden", // Ensures no content overflows the box
+                    }}
                     animation="borderMove 2s linear infinite"
                     css={{
                       "@keyframes borderMove": {
@@ -178,15 +218,13 @@ const VideoFeedPage = () => {
                   >
                     <video
                       ref={(el) => (videoRefs.current[index] = el)}
-                      width="100%"
-                      height="100%"
                       controls={false}
                       autoPlay={false}
                       data-index={index}
                       style={{
-                        objectFit: "cover",
-                        width: "100%",
-                        height: "100%",
+                        objectFit: "cover", // Ensures the video fills its container without distortion
+                        maxWidth: "100%", // Makes sure the video doesn't exceed the parent's width
+                        maxHeight: "100%", // Ensures the video doesn't exceed the parent's height
                         borderRadius: "8px",
                       }}
                       onClick={() => handleVideoClick(index)}
@@ -199,6 +237,7 @@ const VideoFeedPage = () => {
                       position="absolute"
                       top="10px"
                       left="10px"
+                      gap={1}
                       display="flex"
                       alignItems="center"
                       color="white"
@@ -217,7 +256,7 @@ const VideoFeedPage = () => {
                                 "/default-avatar.png"
                               }
                               alt="User Profile"
-                              boxSize="60px"
+                              boxSize={["40px", "40px", "60px"]}
                               borderRadius="full"
                               mr={2}
                               cursor="pointer"
@@ -228,11 +267,11 @@ const VideoFeedPage = () => {
                             />
                           </Link>
                           <Text
-                            mt={-2}
+                            mt={-1}
                             fontWeight="bold"
-                            color={
-                              colorMode === "dark" ? "white" : "black"
-                            }
+                            color={colorMode === "dark" ? "red.500" : "red.500"}
+                            borderBottom="2px solid " // Adds a line below the text
+                            borderColor={colorMode === "dark" ? "red.500" : "red.500"} // Customize the line color
                           >
                             @{post.postedBy.username}
                           </Text>
