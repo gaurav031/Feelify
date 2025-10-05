@@ -16,6 +16,10 @@ import Notifications from "./pages/NotificationPage";
 import StoryModalPage from "./pages/StoryModalPage";
 import FollowersFollowingPage from "./pages/FollowersFollowingPage";
 import VideoFeedPage from "./pages/VideoFeedPage";
+import AdminDashboard from "./pages/AdminDashboardPage";
+import ManageUsers from "./components/ManageUsers";
+import ManagePosts from "./components/ManagePosts";
+import ForgotPassword from "./components/ForgotPassword";
 
 function App() {
     const user = useRecoilValue(userAtom);
@@ -28,6 +32,8 @@ function App() {
                 <Routes>
                     <Route path='/' element={user ? <HomePage /> : <Navigate to='/auth' />} />
                     <Route path='/auth' element={!user ? <AuthPage /> : <Navigate to='/' />} />
+                    <Route path='/forgot-password' element={!user ? <ForgotPassword /> : <Navigate to='/forgot-password' />} />
+
                     <Route path='/update' element={user ? <UpdateProfilePage /> : <Navigate to='/auth' />} />
                     <Route path='/search' element={<UserSearch />} /> {/* UserSearch route */}
                     <Route path='/:username' element={<UserPage />} />
@@ -39,6 +45,12 @@ function App() {
                     <Route path='/notifications' element={user ? <Notifications /> : <Navigate to={"/auth"} />} />
                     <Route path="/story-viewer" element={user ? <StoryModalPage /> : <Navigate to={"/auth"} />} />
                     <Route path="/video" element={user ? <VideoFeedPage /> : <Navigate to={"/auth"} />} />
+
+
+                    <Route path="/admin" element={<AdminDashboard />}>
+                        <Route path="users" element={<ManageUsers />} />
+                        <Route path="posts" element={<ManagePosts />} />
+                    </Route>
 
                 </Routes>
             </Container>

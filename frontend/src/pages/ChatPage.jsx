@@ -42,19 +42,28 @@ const ChatPage = () => {
   const sortConversations = (convs) =>
     convs.sort((a, b) => new Date(b.lastMessage?.date) - new Date(a.lastMessage?.date));
 
+  // Listen for new messages via Socket.IO
   useEffect(() => {
     socket?.on("newMessage", (newMessage) => {
+      console.log("New Message Received:", newMessage);
       setConversations((prev) => {
-        const updatedConversations = [
-          newMessage,
-          ...prev.filter((conversation) => conversation?._id !== newMessage?._id),
-        ];
+        const updatedConversations = prev.map((conversation) =>
+          conversation._id === newMessage.conversationId
+            ? { ...conversation, lastMessage: newMessage }
+            : conversation
+        );
+        console.log("Updated Conversations Before Sorting:", updatedConversations);
+        const sortedConversations = sortConversations(updatedConversations);
+        console.log("Updated Conversations After Sorting:", sortedConversations);
         messageSound.play();
-        return sortConversations(updatedConversations);
+        return sortedConversations;
       });
     });
+
+    return () => socket?.off("newMessage");
   }, [socket, setConversations]);
 
+  // Fetch conversations on component mount
   useEffect(() => {
     const getConversations = async () => {
       try {
@@ -71,7 +80,10 @@ const ChatPage = () => {
             profilePic: participant.profilePic || "/default-avatar.png",
           })) || [],
         }));
-        setConversations(sortConversations(formattedData));
+        console.log("Fetched Conversations Before Sorting:", formattedData);
+        const sortedConversations = sortConversations(formattedData);
+        console.log("Fetched Conversations After Sorting:", sortedConversations);
+        setConversations(sortedConversations);
       } catch (error) {
         showToast("Error", error.message, "error");
       } finally {
@@ -82,6 +94,7 @@ const ChatPage = () => {
     getConversations();
   }, [showToast, setConversations]);
 
+  // Handle conversation search
   const handleConversationSearch = async (e) => {
     e.preventDefault();
     setSearchingUser(true);
@@ -137,6 +150,7 @@ const ChatPage = () => {
     }
   };
 
+  // Handle conversation click
   const handleConversationClick = (conversation) => {
     setSelectedConversation({
       _id: conversation?._id,
@@ -148,6 +162,7 @@ const ChatPage = () => {
     setShowConversations(false);
   };
 
+  // Handle back button click
   const handleBackClick = () => {
     if (showConversations) {
       navigate("/");

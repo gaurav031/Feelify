@@ -8,8 +8,11 @@ const userSchema = mongoose.Schema(
     },
     username: {
       type: String,
-      required: true,
+      required: function() {
+        return !this.googleId; // Username not required for Google users
+      },
       unique: true,
+      sparse: true,
     },
     email: {
       type: String,
@@ -19,7 +22,9 @@ const userSchema = mongoose.Schema(
     password: {
       type: String,
       minLength: 6,
-      required: true,
+      required: function() {
+        return !this.googleId; // Password not required for Google users
+      },
     },
     profilePic: {
       type: String,
@@ -35,6 +40,21 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isAdmin: { type: Boolean, default: false },
+    googleId: {
+      type: String,
+      sparse: true,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    otp: {
+      code: String,
+      expiresAt: Date,
+    },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
   },
   {
     timestamps: true,

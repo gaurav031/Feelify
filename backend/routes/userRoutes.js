@@ -1,29 +1,45 @@
 import express from "express";
 import {
-	followUnFollowUser,
-	getUserProfile,
-	loginUser,
-	logoutUser,
-	signupUser,
-	updateUser,
-	getSuggestedUsers,
-	freezeAccount,
-	getFollowers,
-	getFollowing,
+  getUserProfile,
+  searchUser,
+  verifyOTPAndSignup,
+  loginUser,
+  logoutUser,
+  followUnFollowUser,
+  updateUser,
+  getSuggestedUsers,
+  freezeAccount,
+  getFollowers,
+  getFollowing,
+  sendSignupOTP,
+  googleAuth,
+  sendPasswordResetOTP,
+  verifyPasswordResetOTP,
+  resetPasswordWithOTP,
 } from "../controllers/userController.js";
 import protectRoute from "../middlewares/protectRoute.js";
 
 const router = express.Router();
 
 router.get("/profile/:query", getUserProfile);
+router.get("/search", searchUser);
 router.get("/suggested", protectRoute, getSuggestedUsers);
-router.post("/signup", signupUser);
+router.get("/followers/:id", protectRoute, getFollowers);
+router.get("/following/:id", protectRoute, getFollowing);
+
+router.post("/signup/otp", sendSignupOTP);
+router.post("/signup", verifyOTPAndSignup);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
-router.post("/follow/:id", protectRoute, followUnFollowUser); // Toggle state(follow/unfollow)
+router.post("/google-auth", googleAuth);
+
+// Password reset routes - fixed order and naming
+router.post("/send-password-reset-otp", sendPasswordResetOTP);
+router.post("/verify-password-reset-otp", verifyPasswordResetOTP);
+router.post("/reset-password-with-otp", resetPasswordWithOTP);
+
+router.post("/follow/:id", protectRoute, followUnFollowUser);
 router.put("/update/:id", protectRoute, updateUser);
 router.put("/freeze", protectRoute, freezeAccount);
-router.get("/:id/followers", getFollowers);
-router.get("/:id/following", getFollowing);
 
 export default router;
