@@ -3,122 +3,68 @@ import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./db/connectDB.js";
 import cookieParser from "cookie-parser";
-import { v2 as cloudinary } from "cloudinary";
-import { createServer } from "http";
-import { Server } from "socket.io";
-import cors from "cors";
-
 import userRoutes from "./routes/userRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
-import storyRoutes from "./routes/storyRoutes.js";
+import storyRoutes from "./routes/storyRoutes.js"
+import { v2 as cloudinary } from "cloudinary";
 import job from "./cron/cron.js";
+import { createServer } from "http"; // Import the createServer function
+import { Server } from "socket.io"; // Import the Server class from socket.io
 
 dotenv.config();
-const app = express();
+const app = express(); // Create an instance of express
 const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
-// Connect DB & start cron job
-connectDB();
-job.start();
+connectDB(); // Connect to the database
+job.start(); // Start any scheduled jobs
 
-// Cloudinary config
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// CORS configuration
-app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
-  credentials: true
-}));
-
-// Create HTTP + Socket.io server
-const server = createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  },
-});
-
-// Attach io to req
+// Middleware to attach Socket.io instance to the request object
 app.use((req, res, next) => {
-  req.io = io;
-  next();
+    req.io = io;
+    next();
 });
 
-// Middleware
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+// Middleware setup
+app.use(express.json({ limit: "50mb" })); // To parse JSON data in the req.body
+app.use(express.urlencoded({ extended: true })); // To parse form data in the req.body
+app.use(cookieParser()); // Cookie parser middleware
 
-// Routes
+// Set up routes
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/stories", storyRoutes);
 
-// Health check endpoint
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ 
-    status: "OK", 
-    message: "Server is running",
-    timestamp: new Date().toISOString()
-  });
-});
 
-// Frontend serving - FIXED PATH
+// Serve frontend in production
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
-  
-  app.get("*", (req, res) => {
-    // Don't serve HTML for API routes
-    if (req.path.startsWith('/api/')) {
-      return res.status(404).json({ message: "API route not found" });
-    }
-    res.sendFile(path.resolve(__dirname, "../frontend/dist/index.html"));
-  });
-} else {
-  // Development route
-  app.get("/", (req, res) => {
-    res.json({ 
-      message: "API Running...",
-      environment: process.env.NODE_ENV,
-      timestamp: new Date().toISOString()
+    app.use(express.static(path.join(__dirname, "/frontend/dist")));
+
+    // React app
+    app.get("*", (req, res) => {
+        res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
     });
-  });
 }
 
-// Socket.io
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
-  socket.on("disconnect", () =>
-    console.log("User disconnected:", socket.id)
-  );
+// Create HTTP server and Socket.io instance
+const server = createServer(app); // Create the server with the express app
+const io = new Server(server); // Initialize Socket.io with the HTTP server
+
+// Middleware to attach io to req object
+app.use((req, res, next) => {
+    req.io = io; // Attach the io instance to the request object
+    next();
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error("Error:", err);
-  res.status(500).json({ 
-    message: "Internal Server Error",
-    error: process.env.NODE_ENV === 'production' ? {} : err.message 
-  });
-});
-
-// 404 handler for API routes
-app.use("/api/*", (req, res) => {
-  res.status(404).json({ message: "API endpoint not found" });
-});
-
-server.listen(PORT, () =>
-  console.log(`✅ Server running at http://localhost:${PORT} in ${process.env.NODE_ENV} mode`)
-);
-
-export default app;
+// Listen on the specified port
+server.listen(PORT, () => console.log(`Server started at http://localhost:${PORT}`));
