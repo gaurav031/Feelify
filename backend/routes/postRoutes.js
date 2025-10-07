@@ -1,34 +1,40 @@
-// postRoutes.js
 import express from "express";
-import {
-	createPost,
-	deletePost,
-	getPost,
-	likeUnlikePost,
-	replyToPost,
-	getFeedPosts,
-	getUserPosts,
-	searchPosts,
-	repostPost,
-} from "../controllers/postController.js";
+import multer from "multer";
 import protectRoute from "../middlewares/protectRoute.js";
-import multer from 'multer';
+import {
+  createPost,
+  deletePost,
+  getPost,
+  likeUnlikePost,
+  replyToPost,
+  getFeedPosts,
+  getUserPosts,
+  searchPosts,
+  repostPost,
+} from "../controllers/postController.js";
 
-// FIX: Use memory storage for Vercel (read-only file system)
+// ✅ Use memoryStorage for Vercel (read-only FS)
 const storage = multer.memoryStorage();
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
-  }
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
 });
 
 const router = express.Router();
 
+// Routes
 router.get("/feed", protectRoute, getFeedPosts);
 router.get("/:id", getPost);
 router.get("/user/:username", getUserPosts);
-router.post("/create", upload.fields([{ name: 'img', maxCount: 1 }, { name: 'video', maxCount: 1 }]), protectRoute, createPost);
+router.post(
+  "/create",
+  protectRoute,
+  upload.fields([
+    { name: "img", maxCount: 1 },
+    { name: "video", maxCount: 1 },
+  ]),
+  createPost
+);
 router.delete("/:id", protectRoute, deletePost);
 router.put("/like/:id", protectRoute, likeUnlikePost);
 router.put("/reply/:id", protectRoute, replyToPost);

@@ -1,90 +1,73 @@
 import Notification from "../models/notificationModel.js";
 import Post from "../models/postModel.js";
-import { v2 as cloudinary } from "cloudinary";
 import User from "../models/userModel.js";
+import { v2 as cloudinary } from "cloudinary";
 
 const createPost = async (req, res) => {
-    try {
-        const { postedBy, text } = req.body;
-        let img, video;
+  try {
+    const { postedBy, text } = req.body;
+    let img, video;
 
-        // if (!postedBy || !text) {
-        //     return res.status(400).json({ error: "Postedby and text fields are required" });
-        // }
+    const user = await User.findById(postedBy);
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-        const user = await User.findById(postedBy);
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
+    if (user._id.toString() !== req.user._id.toString())
+      return res.status(401).json({ error: "Unauthorized" });
 
-        if (user._id.toString() !== req.user._id.toString()) {
-            return res.status(401).json({ error: "Unauthorized to create post" });
-        }
+    if (text && text.length > 500)
+      return res
+        .status(400)
+        .json({ error: "Text must be less than 500 characters" });
 
-        const maxLength = 500;
-        if (text && text.length > maxLength) {
-            return res.status(400).json({ error: `Text must be less than ${maxLength} characters` });
-        }
-
-        // FIXED: Handle image upload from memory buffer
-        if (req.files && req.files.img) {
-            const uploadedResponse = await new Promise((resolve, reject) => {
-                const uploadStream = cloudinary.uploader.upload_stream(
-                    { resource_type: "image" },
-                    (error, result) => {
-                        if (error) reject(error);
-                        else resolve(result);
-                    }
-                );
-                uploadStream.end(req.files.img[0].buffer);
-            });
-            img = uploadedResponse.secure_url;
-        }
-
-        // FIXED: Handle video upload from memory buffer
-        if (req.files && req.files.video) {
-            const uploadedResponse = await new Promise((resolve, reject) => {
-                const uploadStream = cloudinary.uploader.upload_stream(
-                    { resource_type: "video" },
-                    (error, result) => {
-                        if (error) reject(error);
-                        else resolve(result);
-                    }
-                );
-                uploadStream.end(req.files.video[0].buffer);
-            });
-            video = uploadedResponse.secure_url;
-        }
-
-        const newPost = new Post({ postedBy, text, img, video });
-        await newPost.save();
-        
-        // Populate the user data before sending response
-        await newPost.populate('postedBy', 'username name profilePic');
-        
-        res.status(201).json(newPost);
-    } catch (err) {
-        console.error("Error in createPost:", err);
-        res.status(500).json({ error: "An error occurred while creating post" });
+    // ✅ Upload image to Cloudinary
+    if (req.files?.img) {
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: "image" },
+          (error, result) => (error ? reject(error) : resolve(result))
+        );
+        stream.end(req.files.img[0].buffer);
+      });
+      img = result.secure_url;
     }
+
+    // ✅ Upload video to Cloudinary
+    if (req.files?.video) {
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: "video" },
+          (error, result) => (error ? reject(error) : resolve(result))
+        );
+        stream.end(req.files.video[0].buffer);
+      });
+      video = result.secure_url;
+    }
+
+    const newPost = new Post({ postedBy, text, img, video });
+    await newPost.save();
+    await newPost.populate("postedBy", "username name profilePic");
+
+    res.status(201).json(newPost);
+  } catch (err) {
+    console.error("Error in createPost:", err);
+    res.status(500).json({ error: "An error occurred while creating post" });
+  }
 };
 
+// ✅ Other controllers unchanged but cleaned up
 const getPost = async (req, res) => {
-    try {
-        const post = await Post.findById(req.params.id)
-            .populate('postedBy', 'username name profilePic')
-            .populate('replies.userId', 'username name profilePic');
+  try {
+    const post = await Post.findById(req.params.id)
+      .populate("postedBy", "username name profilePic")
+      .populate("replies.userId", "username name profilePic");
 
-        if (!post) {
-            return res.status(404).json({ error: "Post not found" });
-        }
-
-        res.status(200).json(post);
-    } catch (err) {
-        console.error("Error fetching post:", err);
-        res.status(500).json({ error: "An error occurred while fetching post" });
-    }
-}; 
+    if (!post) return res.status(404).json({ error: "Post not found" });
+    res.status(200).json(post);
+  } catch (err) {
+    console.error("Error fetching post:", err);
+    res.status(500).json({ error: "Error fetching post" });
+  }
+};
 
 const deletePost = async (req, res) => {
     try {
