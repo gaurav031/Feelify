@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import { v2 as cloudinary } from "cloudinary";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import cors from "cors";
 
 import userRoutes from "./routes/userRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
@@ -29,6 +30,12 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  credentials: true
+}));
 
 // Create HTTP + Socket.io server
 const server = createServer(app);
@@ -57,12 +64,35 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/stories", storyRoutes);
 
-// Frontend serving
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ 
+    status: "OK", 
+    message: "Server is running",
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Frontend serving - FIXED PATH
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "/frontend/dist")));
-  app.get("*", (req, res) =>
-    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"))
-  );
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+  
+  app.get("*", (req, res) => {
+    // Don't serve HTML for API routes
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ message: "API route not found" });
+    }
+    res.sendFile(path.resolve(__dirname, "../frontend/dist/index.html"));
+  });
+} else {
+  // Development route
+  app.get("/", (req, res) => {
+    res.json({ 
+      message: "API Running...",
+      environment: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
+    });
+  });
 }
 
 // Socket.io
@@ -72,10 +102,23 @@ io.on("connection", (socket) => {
     console.log("User disconnected:", socket.id)
   );
 });
-app.get("/", (req, res) => {
-  res.send("API Running...");
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
+  res.status(500).json({ 
+    message: "Internal Server Error",
+    error: process.env.NODE_ENV === 'production' ? {} : err.message 
+  });
+});
+
+// 404 handler for API routes
+app.use("/api/*", (req, res) => {
+  res.status(404).json({ message: "API endpoint not found" });
 });
 
 server.listen(PORT, () =>
-  console.log(`✅ Server running at http://localhost:${PORT}`)
+  console.log(`✅ Server running at http://localhost:${PORT} in ${process.env.NODE_ENV} mode`)
 );
+
+export default app;
