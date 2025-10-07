@@ -397,7 +397,6 @@ const googleAuth = async (req, res) => {
 // ALTERNATIVE: Exchange code for tokens (if you want to keep code flow)
 const exchangeCodeForTokens = async (code) => {
     try {
-        // Initialize Google client if not already initialized
         if (!googleClient) {
             const initialized = initializeGoogleClient();
             if (!initialized) {
@@ -407,14 +406,19 @@ const exchangeCodeForTokens = async (code) => {
 
         console.log("Exchanging code for tokens...");
         
+        // Use environment variable or determine redirect URI dynamically
+        const redirectUri = process.env.GOOGLE_REDIRECT_URI || 
+                          (process.env.NODE_ENV === 'production' 
+                              ? 'postmessage'  // For production with popup/redirect flow
+                              : 'http://localhost:3000');
+        
         const { tokens } = await googleClient.getToken({
             code: code,
-            redirect_uri: process.env.GOOGLE_REDIRECT_URI || 'postmessage'
+            redirect_uri: redirectUri
         });
         
         console.log("Tokens received successfully");
         
-        // Verify the ID token
         const ticket = await googleClient.verifyIdToken({
             idToken: tokens.id_token,
             audience: process.env.GOOGLE_CLIENT_ID
