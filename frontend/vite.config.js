@@ -14,6 +14,7 @@ export default defineConfig({
     }
   },
   build: {
-    chunkSizeWarningLimit: 1000 // optional
+    outDir: "frontend/dist", // Add this line
+    chunkSizeWarningLimit: 1000
   }
 });
