@@ -1,35 +1,37 @@
 {
-	"name": "backend",
-	"version": "1.0.0",
-	"description": "",
-	"main": "server.js",
-	"scripts": {
-		"dev": "NODE_ENV=development nodemon backend/server.js",
-		"start": "cross-env NODE_ENV=production node backend/server.js",
-		"build": "npm install && npm install --prefix frontend && npm run build --prefix frontend"
-	},
-	"type": "module",
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"dependencies": {
-		"bcryptjs": "^2.4.3",
-		"cloudinary": "^1.40.0",
-		"cookie-parser": "^1.4.6",
-		"cors": "^2.8.5",
-		"cron": "^3.1.6",
-		"cross-env": "^7.0.3",
-		"dotenv": "^16.6.1",
-		"express": "^4.21.2",
-		"google-auth-library": "^10.4.0",
-		"jsonwebtoken": "^9.0.2",
-		"mongoose": "^7.8.7",
-		"multer": "^1.4.5-lts.1",
-		"nodemailer": "^7.0.6",
-		"socket.io": "^4.7.2",
-		"zustand": "^5.0.1"
-	},
-	"devDependencies": {
-		"nodemon": "^3.1.10"
-	}
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "dev": "NODE_ENV=development nodemon backend/server.js",
+    "start": "cross-env NODE_ENV=production node backend/server.js",
+    "build": "npm install && cd frontend && npm install && npm run build",
+    "install-client": "cd frontend && npm install",
+    "build-client": "cd frontend && npm run build"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^1.40.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "cron": "^3.1.6",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "google-auth-library": "^10.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.8.7",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^7.0.6",
+    "socket.io": "^4.7.2",
+    "zustand": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
 }
