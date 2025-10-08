@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "NODE_ENV=development nodemon backend/server.js",
     "start": "cross-env NODE_ENV=production node backend/server.js",
-    "build": "npm install && cd frontend && npm install && npm run build",
-    "install-client": "cd frontend && npm install",
-    "build-client": "cd frontend && npm run build"
+    "build": "npm install && cd frontend && rm -rf node_modules && npm install --legacy-peer-deps && npm run build",
+    "install-deps": "npm install && cd frontend && npm install --legacy-peer-deps",
+    "build-frontend": "cd frontend && npm run build"
   },
   "type": "module",
   "keywords": [],
